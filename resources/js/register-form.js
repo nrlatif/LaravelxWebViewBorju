@@ -51,9 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reset form
                 registerForm.reset();
 
-                // Redirect after 2 seconds
+                // Redirect after 2 seconds (use safe redirect to avoid loops)
                 setTimeout(() => {
-                    window.location.href = '/login';
+                    window.safeRedirectToLogin?.();
                 }, 2000);
             } else {
                 errorMessage.textContent = result.error || 'Pendaftaran gagal. Silakan coba lagi.';

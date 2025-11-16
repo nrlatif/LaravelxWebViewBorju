@@ -8,4 +8,368 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* KP Borju Brand Colors */
+    --color-primary: #991B27;
+    --color-secondary: #BD2630;
+    --color-tertiary: #ED884C;
+}
+
+/* KP Borju Custom Styles */
+:root {
+    --color-primary: #991B27;
+    --color-secondary: #BD2630;
+    --color-tertiary: #ED884C;
+    --vh: 1vh;
+}
+
+/* Navbar Top Styling */
+.navbar-top {
+    background: linear-gradient(135deg, #991B27 0%, #BD2630 100%);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(153, 27, 39, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    gap: 1rem;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: bold;
+    text-align: center;
+    flex: 1;
+}
+
+.navbar-toggle {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+}
+
+.navbar-toggle svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Form Container Styling */
+.kp-form-container {
+    background: linear-gradient(135deg, rgba(153, 27, 39, 0.05) 0%, rgba(189, 38, 48, 0.05) 100%);
+    border: 2px solid #991B27;
+    border-radius: 12px;
+}
+
+/* Form Input Styling with gradient border effect */
+.kp-form-input {
+    border: 2px solid #E0E0E0;
+    background-color: #FAFAFA;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.kp-form-input:focus {
+    border-color: #991B27;
+    background-color: #FFF;
+    box-shadow: 0 0 0 3px rgba(153, 27, 39, 0.1), inset 0 1px 2px rgba(237, 136, 76, 0.1);
+    outline: none;
+}
+
+/* Form Label Styling */
+.kp-form-label {
+    color: #991B27;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Form Button with gradient on hover */
+.kp-btn-primary {
+    background: linear-gradient(135deg, #991B27 0%, #BD2630 100%);
+    color: white;
+    font-weight: 700;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(153, 27, 39, 0.3);
+}
+
+.kp-btn-primary:hover {
+    background: linear-gradient(135deg, #BD2630 0%, #991B27 100%);
+    box-shadow: 0 6px 16px rgba(153, 27, 39, 0.4);
+    transform: translateY(-2px);
+}
+
+.kp-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(153, 27, 39, 0.2);
+}
+
+/* Form Link Styling */
+.kp-form-link {
+    color: #991B27;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.kp-form-link:hover {
+    color: #BD2630;
+}
+
+.kp-form-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #991B27, #ED884C);
+    transition: width 0.3s ease;
+}
+
+.kp-form-link:hover::after {
+    width: 100%;
+}
+
+/* Responsive Design for Mobile and WebView */
+@media (max-width: 640px) {
+    /* Full screen height for mobile */
+    body {
+        overflow-x: hidden;
+        -webkit-user-select: none;
+        user-select: none;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Form container responsive - wider on mobile */
+    form {
+        padding: 1.5rem !important;
+        border-radius: 8px !important;
+        margin: 0 !important;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Main container padding - reduced for portrait */
+    .flex.items-center.justify-center {
+        padding: 0.5rem;
+        min-height: 100vh;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Outer form wrapper */
+    .w-full.max-w-md {
+        width: 95% !important;
+        max-width: 95% !important;
+        padding: 0.25rem !important;
+        margin: 0 auto !important;
+    }
+
+    /* Input fields responsive */
+    .kp-form-input {
+        padding: 0.75rem !important;
+        font-size: 16px !important; /* Prevents iOS zoom on focus */
+        border-radius: 6px !important;
+        width: 100%;
+    }
+
+    /* Label responsive */
+    .kp-form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Button responsive */
+    .kp-btn-primary {
+        padding: 0.75rem !important;
+        font-size: 1rem !important;
+        border-radius: 6px !important;
+        min-height: 44px; /* Apple recommended touch target */
+        width: 100%;
+    }
+
+    /* Remove hover effect on touch devices */
+    .kp-btn-primary:active {
+        transform: scale(0.98);
+    }
+
+    /* Password toggle button sizing */
+    .absolute.right-3 {
+        padding: 0.5rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        right: 0.5rem !important;
+    }
+
+    /* Icon sizing for mobile */
+    .w-5.h-5 {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    /* Modal responsive */
+    #forgotPasswordModal {
+        padding: 1rem !important;
+        width: 100%;
+    }
+
+    #forgotPasswordModal > div {
+        margin: 1rem !important;
+        max-width: 90vw !important;
+        width: 100%;
+    }
+
+    /* Alert responsive */
+    .bg-red-100,
+    .bg-green-100 {
+        padding: 0.75rem !important;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    /* Text responsive */
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    a {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Form spacing */
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+
+    /* Prevent double tap zoom */
+    input,
+    button,
+    a {
+        -webkit-touch-callout: none;
+    }
+
+    /* WebView specific adjustments */
+    * {
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
+    /* Prevent viewport jump on orientation change */
+    .flex.items-center.justify-center.min-h-screen {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Input field container spacing */
+    form > div {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-width: 640px) and (orientation: landscape) {
+    .flex.items-center.justify-center.min-h-screen {
+        min-height: auto;
+        height: 100vh;
+    }
+
+    form {
+        padding: 1rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .kp-form-input {
+        padding: 0.6rem !important;
+    }
+
+    .kp-btn-primary {
+        padding: 0.6rem !important;
+        min-height: 40px;
+    }
+
+    .mt-6 {
+        margin-top: 1rem !important;
+    }
+}
+
+/* Extra small screens (< 360px) */
+@media (max-width: 360px) {
+    form {
+        padding: 1rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .kp-form-input {
+        font-size: 15px !important;
+    }
+
+    .kp-btn-primary {
+        padding: 0.6rem !important;
+    }
+}
+
+/* Extra small screens (< 360px) */
+@media (max-width: 360px) {
+    form {
+        padding: 1rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .kp-form-input {
+        font-size: 15px !important;
+    }
+
+    .kp-btn-primary {
+        padding: 0.6rem !important;
+    }
+}
+
+/* Tablet and larger screens */
+@media (min-width: 641px) {
+    .kp-btn-primary:hover {
+        background: linear-gradient(135deg, #BD2630 0%, #991B27 100%);
+        box-shadow: 0 6px 16px rgba(153, 27, 39, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .kp-form-link:hover::after {
+        width: 100%;
+    }
 }

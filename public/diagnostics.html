@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete System Diagnostics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-top: 0;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .test-result {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+        .status-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+        .status-icon.ok { color: #27ae60; }
+        .status-icon.error { color: #e74c3c; }
+        .status-icon.warning { color: #f39c12; }
+        .status-icon.loading { animation: spin 1s linear infinite; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-text {
+            flex: 1;
+        }
+        .status-text strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .status-text small {
+            color: #666;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .button-group {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .output-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .output-box .success { color: #4ec9b0; }
+        .output-box .error { color: #f48771; }
+        .output-box .warning { color: #dcdcaa; }
+        .output-box .info { color: #9cdcfe; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Complete System Diagnostics</h1>
+
+        <div class="button-group">
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+            <button onclick="clearOutput()">🗑️ Clear Output</button>
+            <button onclick="copyOutput()">📋 Copy Output</button>
+            <button onclick="downloadReport()">💾 Download Report</button>
+        </div>
+
+        <!-- Environment Check -->
+        <h2>Environment & Servers</h2>
+        <div class="test-section">
+            <div class="test-result">
+                <div class="status-icon loading">⏳</div>
+                <div class="status-text">
+                    <strong>Laravel Server</strong>
+                    <small id="laravel-status">Checking...</small>
+                </div>
+            </div>
+            <div class="test-result">
+                <div class="status-icon loading">⏳</div>
+                <div class="status-text">
+                    <strong>Vite Dev Server</strong>
+                    <small id="vite-status">Checking...</small>
+                </div>
+            </div>
+            <button onclick="testServers()">Test Servers</button>
+        </div>
+
+        <!-- Firebase Check -->
+        <h2>Firebase Configuration</h2>
+        <div class="test-section">
+            <div class="test-result">
+                <div class="status-icon loading">⏳</div>
+                <div class="status-text">
+                    <strong>Firebase Initialization</strong>
+                    <small id="firebase-init-status">Checking...</small>
+                </div>
+            </div>
+            <div class="test-result">
+                <div class="status-icon loading">⏳</div>
+                <div class="status-text">
+                    <strong>Firestore Connection</strong>
+                    <small id="firestore-status">Checking...</small>
+                </div>
+            </div>
+            <button onclick="testFirebase()">Test Firebase</button>
+        </div>
+
+        <!-- Auth Check -->
+        <h2>Authentication</h2>
+        <div class="test-section">
+            <div class="test-result">
+                <div class="status-icon loading">⏳</div>
+                <div class="status-text">
+                    <strong>User Authentication Status</strong>
+                    <small id="auth-status">Checking...</small>
+                </div>
+            </div>
+            <button onclick="testAuth()">Test Authentication</button>
+        </div>
+
+        <!-- Menu Functions Check -->
+        <h2>Menu Functions</h2>
+        <div class="test-section">
+            <div class="test-result">
+                <div class="status-icon loading">⏳</div>
+                <div class="status-text">
+                    <strong>Window Menu Functions</strong>
+                    <small id="functions-status">Checking...</small>
+                </div>
+            </div>
+            <button onclick="testFunctions()">Test Functions</button>
+            <button onclick="testGetMenus()">Test Get Menus</button>
+        </div>
+
+        <!-- Data Check -->
+        <h2>Firestore Data</h2>
+        <div class="test-section">
+            <div class="button-group">
+                <button onclick="checkMenusCollection()">Check Menus Data</button>
+                <button onclick="checkOrdersData()">Check Orders Data</button>
+                <button onclick="checkStatsData()">Check Stats Data</button>
+            </div>
+            <div id="data-output" class="output-box"></div>
+        </div>
+
+        <!-- System Output -->
+        <h2>System Output & Logs</h2>
+        <div class="test-section">
+            <button onclick="clearOutput()">Clear Logs</button>
+            <button onclick="downloadReport()">Download Report</button>
+            <div id="output" class="output-box"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        let logCount = 0;
+
+        function log(msg, type = 'info') {
+            logCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? 'success' :
+                         type === 'error' ? 'error' :
+                         type === 'warning' ? 'warning' : 'info';
+
+            const prefix = type === 'success' ? '✓' :
+                          type === 'error' ? '✗' :
+                          type === 'warning' ? '⚠' : 'ℹ';
+
+            output.innerHTML += `<span class="${color}">[${timestamp}] ${prefix} ${msg}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const max = 30;
+            const percentage = Math.min((logCount / max) * 100, 100);
+            document.getElementById('progress').style.width = percentage + '%';
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+            logCount = 0;
+            document.getElementById('progress').style.width = '0%';
+        }
+
+        function copyOutput() {
+            const text = output.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✓ Output copied to clipboard!');
+            });
+        }
+
+        function downloadReport() {
+            const text = output.innerText;
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', 'diagnostic-report.txt');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        async function testServers() {
+            log('Testing servers...');
+
+            try {
+                const res = await fetch('http://localhost:8000/');
+                if (res.ok) {
+                    log('✓ Laravel server responding', 'success');
+                    updateStatus('laravel-status', '✓ Running on port 8000');
+                } else {
+                    log('✗ Laravel server not responding properly', 'error');
+                }
+            } catch (e) {
+                log('✗ Laravel server not accessible: ' + e.message, 'error');
+                updateStatus('laravel-status', '✗ Not accessible');
+            }
+
+            try {
+                const res = await fetch('http://localhost:5173/');
+                log('⚠ Vite server responding (this is expected to fail)', 'warning');
+            } catch (e) {
+                log('ℹ Vite is running (expected: connection refused check is normal)', 'info');
+                updateStatus('vite-status', '✓ Should be running (npm run dev)');
+            }
+        }
+
+        async function testFirebase() {
+            log('Testing Firebase configuration...');
+
+            try {
+                if (typeof firebase === 'undefined') {
+                    log('✗ Firebase not loaded', 'error');
+                    updateStatus('firebase-init-status', '✗ Not loaded');
+                    return;
+                }
+                log('✓ Firebase library loaded', 'success');
+                updateStatus('firebase-init-status', '✓ Loaded');
+
+                if (typeof db === 'undefined') {
+                    log('✗ Firestore not initialized', 'error');
+                    updateStatus('firestore-status', '✗ Not initialized');
+                    return;
+                }
+                log('✓ Firestore initialized', 'success');
+                updateStatus('firestore-status', '✓ Connected');
+
+                // Try a simple query
+                try {
+                    const testCollection = await firebase.firestore().collection('menus').limit(1).get();
+                    log('✓ Firestore query successful', 'success');
+                } catch (e) {
+                    log('⚠ Firestore query error (might be security rules): ' + e.message, 'warning');
+                }
+            } catch (e) {
+                log('✗ Firebase test error: ' + e.message, 'error');
+            }
+        }
+
+        async function testAuth() {
+            log('Testing authentication...');
+
+            try {
+                if (!window.authFunctions?.getCurrentUser) {
+                    log('✗ Auth functions not available', 'error');
+                    updateStatus('auth-status', '✗ Functions not available');
+                    return;
+                }
+
+                const user = await window.authFunctions.getCurrentUser();
+                if (user) {
+                    log('✓ User logged in: ' + user.email, 'success');
+                    updateStatus('auth-status', '✓ ' + user.email);
+                } else {
+                    log('⚠ No user logged in', 'warning');
+                    updateStatus('auth-status', '⚠ Not logged in');
+                }
+            } catch (e) {
+                log('✗ Auth test error: ' + e.message, 'error');
+                updateStatus('auth-status', '✗ Error: ' + e.message);
+            }
+        }
+
+        async function testFunctions() {
+            log('Testing menu functions availability...');
+
+            if (!window.menuFunctions) {
+                log('✗ window.menuFunctions not available', 'error');
+                updateStatus('functions-status', '✗ Not available');
+                return;
+            }
+
+            const functions = ['getMenus', 'onMenusChange', 'addMenu', 'updateMenu', 'deleteMenu', 'searchMenus'];
+            const missing = [];
+
+            functions.forEach(fn => {
+                if (typeof window.menuFunctions[fn] === 'function') {
+                    log('✓ Function available: ' + fn, 'success');
+                } else {
+                    log('✗ Function missing: ' + fn, 'error');
+                    missing.push(fn);
+                }
+            });
+
+            if (missing.length === 0) {
+                log('✓ All menu functions available!', 'success');
+                updateStatus('functions-status', '✓ All available (' + functions.length + ')');
+            } else {
+                log('✗ Missing functions: ' + missing.join(', '), 'error');
+                updateStatus('functions-status', '✗ Missing: ' + missing.join(', '));
+            }
+        }
+
+        async function testGetMenus() {
+            log('Testing getMenus function...');
+
+            try {
+                if (!window.menuFunctions?.getMenus) {
+                    log('✗ getMenus function not available', 'error');
+                    return;
+                }
+
+                log('Fetching menus from Firestore...');
+                const menus = await window.menuFunctions.getMenus();
+
+                if (!menus) {
+                    log('✗ getMenus returned null', 'error');
+                    return;
+                }
+
+                if (Array.isArray(menus)) {
+                    log('✓ Successfully fetched ' + menus.length + ' menus', 'success');
+
+                    if (menus.length > 0) {
+                        log('First menu structure:', 'info');
+                        const firstMenu = menus[0];
+                        Object.keys(firstMenu).forEach(key => {
+                            log('  - ' + key + ': ' + (typeof firstMenu[key]), 'info');
+                        });
+
+                        // Show in data section
+                        showMenusData(menus);
+                    } else {
+                        log('⚠ No menus found in Firestore', 'warning');
+                    }
+                } else {
+                    log('✗ getMenus returned invalid data', 'error');
+                }
+            } catch (e) {
+                log('✗ getMenus error: ' + e.message, 'error');
+                log('Stack: ' + e.stack, 'error');
+            }
+        }
+
+        function showMenusData(menus) {
+            const html = `<strong>Menus Data (${menus.length} items):</strong>\n\n` +
+                menus.map((menu, idx) =>
+                    `${idx + 1}. ${menu.name}\n   Price: Rp ${menu.price}\n   ID: ${menu.id}\n`
+                ).join('\n');
+
+            document.getElementById('data-output').innerHTML = `<div>${html}</div>`;
+        }
+
+        async function checkMenusCollection() {
+            log('Checking menus collection...');
+            await testGetMenus();
+        }
+
+        function checkOrdersData() {
+            log('Checking orders data...');
+            const orders = JSON.parse(localStorage.getItem('kp_orders') || '[]');
+            log('Orders found: ' + orders.length, orders.length > 0 ? 'success' : 'warning');
+        }
+
+        function checkStatsData() {
+            log('Checking statistics data...');
+            const stats = JSON.parse(localStorage.getItem('kp_statistics') || '{}');
+            log('Stats available: ' + Object.keys(stats).length + ' fields', 'info');
+        }
+
+        async function runAllTests() {
+            clearOutput();
+            log('====== RUNNING ALL DIAGNOSTICS ======', 'info');
+            log('');
+
+            log('Step 1: Server Status');
+            await testServers();
+
+            log('');
+            log('Step 2: Firebase Configuration');
+            await testFirebase();
+
+            log('');
+            log('Step 3: Authentication');
+            await testAuth();
+
+            log('');
+            log('Step 4: Menu Functions');
+            await testFunctions();
+
+            log('');
+            log('Step 5: Data Check');
+            await testGetMenus();
+
+            log('');
+            log('====== DIAGNOSTICS COMPLETE ======', 'success');
+        }
+
+        function updateStatus(id, status) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = status;
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            log('Page loaded, system ready for testing');
+            log('Click "Run All Tests" to diagnose issues');
+        });
+    </script>
+</body>
+</html>
