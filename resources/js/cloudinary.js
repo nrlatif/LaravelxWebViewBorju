@@ -4,6 +4,9 @@
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+console.log('[Cloudinary Config] Cloud Name:', CLOUDINARY_CLOUD_NAME);
+console.log('[Cloudinary Config] Upload Preset:', CLOUDINARY_UPLOAD_PRESET);
+
 /**
  * Upload image to Cloudinary
  * @param {File} file - Image file to upload
@@ -45,8 +48,16 @@ export async function uploadImageToCloudinary(file, onProgress = null) {
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200) {
                     const response = JSON.parse(xhr.responseText);
-                    console.log('[Cloudinary] Upload successful:', response.secure_url);
-                    resolve(response.secure_url);
+                    console.log('[Cloudinary] Full Response:', response);
+                    
+                    // Ganti domain dari res.cloudinary.com ke console.cloudinary.com
+                    let imageUrl = response.secure_url || response.url;
+                    if (imageUrl) {
+                        imageUrl = imageUrl.replace('res.cloudinary.com', 'console.cloudinary.com');
+                        console.log('[Cloudinary] Modified URL:', imageUrl);
+                    }
+                    
+                    resolve(imageUrl);
                 } else {
                     reject(new Error('Upload failed: ' + xhr.statusText));
                 }

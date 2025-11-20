@@ -6,6 +6,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Riwayat Pesanan</title>
+    
+    <!-- Preconnect untuk optimasi loading -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .history-container {

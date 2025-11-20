@@ -6,6 +6,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Kelola Menu - KP Borju</title>
+    
+    <!-- Preconnect untuk optimasi loading -->
+    <link rel="preconnect" href="https://console.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://console.cloudinary.com">
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .menu-crud-container {
@@ -406,10 +413,16 @@
                 return;
             }
 
-            menuGrid.innerHTML = items.map(item => `
+            menuGrid.innerHTML = items.map(item => {
+                // Optimasi URL Cloudinary dengan transformasi
+                let optimizedUrl = item.imageUrl;
+                if (optimizedUrl && optimizedUrl.includes('cloudinary.com')) {
+                    optimizedUrl = optimizedUrl.replace('/upload/', '/upload/w_300,h_300,c_fill,q_auto,f_auto/');
+                }
+                return `
                 <div class="menu-card">
                     <div class="menu-card-header">
-                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 100%; height: 150px; object-fit: cover;">` : `<div style="width: 100%; height: 150px; background: #E0E0E0; display: flex; align-items: center; justify-content: center;">📷</div>`}
+                        ${item.imageUrl ? `<img src="${optimizedUrl}" alt="${item.name}" loading="lazy" style="width: 100%; height: 150px; object-fit: cover;">` : `<div style="width: 100%; height: 150px; background: #E0E0E0; display: flex; align-items: center; justify-content: center;">📷</div>`}
                     </div>
                     <div class="menu-card-body">
                         <h3 style="margin: 0.5rem 0; font-size: 1rem;">${item.name}</h3>
@@ -429,19 +442,18 @@
                             <span class="menu-info-label">Stok:</span>
                             <span class="menu-info-value">${item.stok || 0}</span>
                         </div>
-                        ${item.description ? `
                         <div class="menu-info">
                             <span class="menu-info-label">Deskripsi:</span>
-                            <span class="menu-info-value">${item.description}</span>
+                            <span class="menu-info-value">${item.description || '-'}</span>
                         </div>
-                        ` : ''}
                     </div>
                     <div class="menu-card-actions">
                         <button class="btn-edit" onclick="editMenu('${item.id}')">Edit</button>
                         <button class="btn-delete" onclick="deleteMenu_Handler('${item.id}')">Hapus</button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Open modal for adding

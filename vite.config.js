@@ -17,6 +17,23 @@ export default defineConfig({
             allowedHeaders: '*',
         },
     },
+    build: {
+        // Optimasi build untuk performance
+        cssCodeSplit: true,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+                }
+            }
+        },
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true, // Hapus console.log di production
+            }
+        }
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
