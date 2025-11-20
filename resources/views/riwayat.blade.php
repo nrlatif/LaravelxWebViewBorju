@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Riwayat Pesanan - KP Borju</title>
+    <title>Riwayat Pesanan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .history-container {
@@ -299,51 +299,149 @@
 
         /* Print receipt styles */
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printReceipt, #printReceipt * {
-                visibility: visible;
+            body > * {
+                display: none !important;
             }
             #printReceipt {
-                position: absolute;
+                display: block !important;
+                position: fixed;
                 left: 0;
                 top: 0;
-                width: 100%;
+                width: 80mm;
+                height: 80mm;
+                margin: 0;
+                padding: 0;
+            }
+            #printReceipt * {
+                visibility: visible;
+            }
+            @page {
+                margin: 0;
+                size: 80mm 80mm;
             }
         }
 
+        #printReceipt {
+            display: none;
+        }
+
         .receipt-container {
-            max-width: 300px;
-            margin: 0 auto;
+            width: 80mm;
+            height: 80mm;
+            max-width: 80mm;
+            max-height: 80mm;
+            margin: 0;
+            padding: 3mm;
             font-family: 'Courier New', monospace;
-            padding: 1rem;
+            background: white;
+            color: black;
+            font-size: 8pt;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         .receipt-header {
             text-align: center;
-            border-bottom: 2px dashed #333;
-            padding-bottom: 0.5rem;
-            margin-bottom: 0.5rem;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 1mm;
+            margin-bottom: 1.5mm;
+        }
+
+        .receipt-logo {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #991B27;
+            margin-bottom: 0.1mm;
+            letter-spacing: 1px;
         }
 
         .receipt-title {
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 8pt;
+            margin-bottom: 0.5mm;
+        }
+
+        .receipt-subtitle {
+            font-size: 6pt;
+            color: #666;
+            margin-bottom: 0.3mm;
+            line-height: 1.1;
+        }
+
+        .receipt-divider {
+            border-bottom: 1px dashed #333;
+            margin: 1.5mm 0;
+        }
+
+        .receipt-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8mm;
+            font-size: 7pt;
+        }
+
+        .receipt-info-label {
+            font-weight: 600;
         }
 
         .receipt-item {
+            margin-bottom: 1mm;
+        }
+
+        .receipt-item-name {
+            font-size: 8pt;
+            font-weight: 600;
+            margin-bottom: 0.5mm;
+            text-align: left;
+        }
+
+        .receipt-item-detail {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
+            font-size: 7pt;
+            color: #555;
+            padding-left: 2mm;
+        }
+
+        .receipt-summary {
+            border-top: 1px dashed #333;
+            padding-top: 1.5mm;
+            margin-top: 1.5mm;
+        }
+
+        .receipt-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8mm;
+            font-size: 7pt;
+        }
+
+        .receipt-total {
+            font-size: 9pt;
+            font-weight: bold;
+            margin-top: 0.8mm;
+            padding-top: 0.8mm;
+            border-top: 1px solid #333;
         }
 
         .receipt-footer {
-            border-top: 2px dashed #333;
-            padding-top: 0.5rem;
-            margin-top: 0.5rem;
+            border-top: 1px dashed #333;
+            padding-top: 1.5mm;
+            margin-top: 2mm;
             text-align: center;
+        }
+
+        .receipt-thank-you {
+            font-size: 9pt;
+            font-weight: bold;
+            margin-bottom: 1mm;
+            color: #000;
+        }
+
+        .receipt-message {
+            font-size: 7pt;
+            color: #333;
+            margin-bottom: 0.5mm;
         }
 
         .empty-state {
@@ -436,6 +534,67 @@
             startDate: null,
             endDate: null
         };
+        let userRole = null; // Will be set after auth check
+        let isRoleChecked = false;
+
+        // Get current user role using onAuthChange
+        async function getCurrentUserRole() {
+            return new Promise(async (resolve) => {
+                console.log('[History] Starting role check...');
+                
+                // Wait for authFunctions to be available
+                let attempts = 0;
+                while (!window.authFunctions && attempts < 50) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
+                }
+
+                if (!window.authFunctions || !window.authFunctions.onAuthChange) {
+                    console.error('[History] authFunctions not available');
+                    userRole = 'admin'; // Default to admin to avoid blocking
+                    isRoleChecked = true;
+                    resolve(userRole);
+                    return;
+                }
+
+                // Use onAuthChange to get user with role
+                const unsubscribe = window.authFunctions.onAuthChange((user) => {
+                    if (user) {
+                        userRole = user.role || 'kasir';
+                        console.log('[History] User role from auth:', userRole);
+                        console.log('[History] User data:', user);
+                    } else {
+                        userRole = 'admin'; // Default to admin if no user
+                        console.log('[History] No user logged in, defaulting to admin');
+                    }
+                    
+                    isRoleChecked = true;
+                    if (unsubscribe) unsubscribe();
+                    resolve(userRole);
+                });
+            });
+        }
+
+        // Set today's date filter for kasir
+        function setTodayFilter() {
+            const today = new Date();
+            // Get local date in YYYY-MM-DD format
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
+            
+            dateFilter.startDate = todayStr;
+            dateFilter.endDate = todayStr;
+            
+            // Update UI
+            const startDateInput = document.getElementById('filterStartDate');
+            const endDateInput = document.getElementById('filterEndDate');
+            if (startDateInput) startDateInput.value = todayStr;
+            if (endDateInput) endDateInput.value = todayStr;
+            
+            console.log('[History] Date filter set to today (local time):', todayStr);
+        }
 
         // Load orders (Firestore only, no localStorage fallback)
         async function initOrders() {
@@ -487,6 +646,19 @@
             document.getElementById('statTotalOrders').textContent = stats.totalOrders || 0;
             document.getElementById('statTotalRevenue').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(stats.totalRevenue || 0)}`;
             document.getElementById('statCompleted').textContent = stats.completedOrders || stats.totalOrders || 0;
+        }
+
+        // Calculate statistics from filtered orders
+        function calculateFilteredStatistics(orders) {
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+            const completedOrders = orders.filter(order => order.status === 'completed').length;
+            
+            return {
+                totalOrders,
+                totalRevenue,
+                completedOrders
+            };
         }
 
         // Set up real-time listener for statistics (auto-updates when orders change)
@@ -546,6 +718,10 @@
             let filtered = filterOrders(currentFilter);
             filtered = filterByDateTime(filtered);
             const orderList = document.getElementById('orderList');
+
+            // Update statistics based on filtered orders
+            const filteredStats = calculateFilteredStatistics(filtered);
+            displayStatistics(filteredStats);
 
             if (filtered.length === 0) {
                 orderList.innerHTML = '<div class="empty-state">Tidak ada pesanan</div>';
@@ -682,85 +858,112 @@
         // Print receipt
         function printReceipt(orderId) {
             const order = allOrders.find(o => o.id === orderId);
-            if (!order) return;
+            if (!order) {
+                console.error('Order tidak ditemukan:', orderId);
+                return;
+            }
+
+            console.log('Printing order:', order);
+
+            // Format date and time
+            const orderDateTime = order.date || new Date().toLocaleString('id-ID');
+            const currentDateTime = new Date().toLocaleString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
 
             // Create receipt HTML
             const receiptHTML = `
                 <div class="receipt-container">
+                    <!-- Header -->
                     <div class="receipt-header">
-                        <div class="receipt-title">KP BORJU</div>
-                        <div style="font-size: 0.8rem;">Kedai Kopi & Makanan</div>
-                        <div style="font-size: 0.75rem; margin-top: 0.5rem;">
-                            ${order.date ? order.date.split(' ')[0] : new Date().toLocaleDateString('id-ID')}
-                        </div>
+                        <div class="receipt-logo">KEDAI SAMBEL BORJU</div>
+                        <div class="receipt-title">Kedai Makanan dan Minuman</div>
+                        <div class="receipt-subtitle" style="font-size: 0.75rem; line-height: 1.3;">Jl. Raya Cigugur No.30B, Kuningan</div>
+                        <div class="receipt-subtitle" style="font-size: 0.75rem;">Kec. Kuningan, Kab. Kuningan</div>
                     </div>
-                    <div style="margin: 1rem 0;">
-                        <div class="receipt-item">
-                            <span>No. Pesanan:</span>
-                            <span>${order.id}</span>
+
+                    <!-- Order Info -->
+                    <div style="margin-bottom: 2mm;">
+                        <div class="receipt-info-row">
+                            <span class="receipt-info-label">No:</span>
+                            <span><strong>#${order.id}</strong></span>
+                        </div>
+                        <div class="receipt-info-row">
+                            <span class="receipt-info-label">Tanggal:</span>
+                            <span style="font-size: 6pt;">${orderDateTime}</span>
                         </div>
                         ${order.customerName ? `
-                        <div class="receipt-item">
-                            <span>Pelanggan:</span>
+                        <div class="receipt-info-row">
+                            <span class="receipt-info-label">Pelanggan:</span>
                             <span>${order.customerName}</span>
                         </div>
                         ` : ''}
                         ${order.tableNumber && order.tableNumber !== '-' ? `
-                        <div class="receipt-item">
-                            <span>Meja:</span>
+                        <div class="receipt-info-row">
+                            <span class="receipt-info-label">No. Meja:</span>
                             <span>${order.tableNumber}</span>
                         </div>
                         ` : ''}
                     </div>
-                    <div style="border-bottom: 1px dashed #333; padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+
+                    <div class="receipt-divider"></div>
+
+                    <!-- Order Items -->
+                    <div style="margin-bottom: 2mm;">
                         ${order.items && order.items.length > 0 ? order.items.map(item => `
                             <div class="receipt-item">
-                                <span>${item.name} x${item.quantity}</span>
-                                <span>Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</span>
+                                <div class="receipt-item-name">${item.name}</div>
+                                <div class="receipt-item-detail">
+                                    <span>${item.quantity} x Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>
+                                    <span><strong>Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</strong></span>
+                                </div>
                             </div>
-                        `).join('') : '<div>Tidak ada item</div>'}
+                        `).join('') : '<div class="receipt-item-name">Tidak ada item</div>'}
                     </div>
-                    <div style="margin: 0.5rem 0;">
-                        <div class="receipt-item">
+
+                    <!-- Summary -->
+                    <div class="receipt-summary">
+                        <div class="receipt-summary-row">
                             <span>Subtotal:</span>
                             <span>Rp ${new Intl.NumberFormat('id-ID').format(order.subtotal || order.total)}</span>
                         </div>
                         ${order.tax && order.tax > 0 ? `
-                        <div class="receipt-item">
+                        <div class="receipt-summary-row">
                             <span>PPN:</span>
                             <span>Rp ${new Intl.NumberFormat('id-ID').format(order.tax)}</span>
                         </div>
                         ` : ''}
-                        <div class="receipt-item" style="font-weight: bold; font-size: 1.1rem; margin-top: 0.5rem;">
+                        <div class="receipt-summary-row receipt-total">
                             <span>TOTAL:</span>
                             <span>Rp ${new Intl.NumberFormat('id-ID').format(order.total)}</span>
                         </div>
                     </div>
-                    ${order.paymentMethod ? `
-                    <div class="receipt-item" style="margin-top: 0.5rem;">
-                        <span>Pembayaran:</span>
-                        <span>${order.paymentMethod.toUpperCase()}</span>
-                    </div>
-                    ` : ''}
+
+                    <!-- Footer -->
                     <div class="receipt-footer">
-                        <div style="margin-top: 1rem; font-size: 0.8rem;">Terima Kasih</div>
-                        <div style="font-size: 0.75rem; margin-top: 0.25rem;">Selamat Menikmati!</div>
+                        <div class="receipt-thank-you">TERIMA KASIH</div>
+                        <div class="receipt-message">Selamat Menikmati!</div>
                     </div>
                 </div>
             `;
 
-            // Create hidden div for printing
+            // Create or update hidden div for printing
             let printDiv = document.getElementById('printReceipt');
             if (!printDiv) {
                 printDiv = document.createElement('div');
                 printDiv.id = 'printReceipt';
-                printDiv.style.display = 'none';
                 document.body.appendChild(printDiv);
             }
             printDiv.innerHTML = receiptHTML;
 
-            // Trigger print
-            window.print();
+            // Trigger print after a short delay to ensure content is rendered
+            setTimeout(() => {
+                window.print();
+            }, 100);
         }
 
         // Delete order — Firestore only (no localStorage fallback)
@@ -853,13 +1056,19 @@
 
         // Reset date filter
         function resetDateFilter() {
-            dateFilter = {
-                startDate: null,
-                endDate: null
-            };
-            document.getElementById('filterStartDate').value = '';
-            document.getElementById('filterEndDate').value = '';
-            renderOrders();
+            // For kasir, reset to today only
+            if (userRole === 'kasir') {
+                setTodayFilter();
+            } else {
+                // For admin, clear all filters
+                dateFilter = {
+                    startDate: null,
+                    endDate: null
+                };
+                document.getElementById('filterStartDate').value = '';
+                document.getElementById('filterEndDate').value = '';
+            }
+            renderOrders(); // This will also update statistics
         }
 
         // Filter buttons
@@ -874,17 +1083,69 @@
 
         // Date filter event listeners
         document.getElementById('filterStartDate').addEventListener('change', (e) => {
+            // Wait for role check to complete
+            if (!isRoleChecked) {
+                console.log('[History] Role check not complete yet');
+                return;
+            }
+            
+            // Kasir cannot change date filter (locked to today)
+            if (userRole === 'kasir') {
+                setTodayFilter();
+                if (window.KPAlert && window.KPAlert.warning) {
+                    window.KPAlert.warning('Akun kasir hanya dapat melihat riwayat hari ini', 'Akses Terbatas');
+                }
+                return;
+            }
             dateFilter.startDate = e.target.value;
             renderOrders();
         });
 
         document.getElementById('filterEndDate').addEventListener('change', (e) => {
+            // Wait for role check to complete
+            if (!isRoleChecked) {
+                console.log('[History] Role check not complete yet');
+                return;
+            }
+            
+            // Kasir cannot change date filter (locked to today)
+            if (userRole === 'kasir') {
+                setTodayFilter();
+                if (window.KPAlert && window.KPAlert.warning) {
+                    window.KPAlert.warning('Akun kasir hanya dapat melihat riwayat hari ini', 'Akses Terbatas');
+                }
+                return;
+            }
             dateFilter.endDate = e.target.value;
             renderOrders();
         });
 
         // Initialize
         (async () => {
+            // Get user role first
+            await getCurrentUserRole();
+            
+            // If kasir, set today filter and disable date inputs
+            if (userRole === 'kasir') {
+                setTodayFilter();
+                
+                // Disable date inputs for kasir
+                const startDateInput = document.getElementById('filterStartDate');
+                const endDateInput = document.getElementById('filterEndDate');
+                if (startDateInput) {
+                    startDateInput.style.opacity = '0.6';
+                    startDateInput.style.cursor = 'not-allowed';
+                    startDateInput.title = 'Kasir hanya dapat melihat riwayat hari ini';
+                }
+                if (endDateInput) {
+                    endDateInput.style.opacity = '0.6';
+                    endDateInput.style.cursor = 'not-allowed';
+                    endDateInput.title = 'Kasir hanya dapat melihat riwayat hari ini';
+                }
+                
+                console.log('[History] Kasir mode: Date filter locked to today');
+            }
+            
             await updateStatistics();
             setupStatisticsListener(); // Set up real-time listener for auto-updates
             initOrders();
