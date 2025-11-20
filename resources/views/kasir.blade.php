@@ -439,10 +439,6 @@
                     <span>Subtotal:</span>
                     <span id="subtotal">Rp 0</span>
                 </div>
-                <div class="cart-summary">
-                    <span>PPN (10%):</span>
-                    <span id="tax">Rp 0</span>
-                </div>
                 <div class="cart-summary total">
                     <span>Total:</span>
                     <span id="totalAmount">Rp 0</span>
@@ -464,10 +460,6 @@
                 <div class="summary-row">
                     <span>Subtotal:</span>
                     <span id="modalSubtotal">Rp 0</span>
-                </div>
-                <div class="summary-row">
-                    <span>PPN (10%):</span>
-                    <span id="modalTax">Rp 0</span>
                 </div>
                 <div class="summary-row total">
                     <span>Total:</span>
@@ -655,12 +647,10 @@
         function updateCartSummary() {
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
+            const total = subtotal; // No tax
 
             document.getElementById('totalItems').textContent = totalItems;
             document.getElementById('subtotal').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}`;
-            document.getElementById('tax').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(tax)}`;
             document.getElementById('totalAmount').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
 
             const checkoutBtn = document.getElementById('checkoutBtn');
@@ -678,8 +668,7 @@
         // Open order modal
         function openOrderModal() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
+            const total = subtotal; // No tax
 
             // Display items
             const itemsList = document.getElementById('orderItemsList');
@@ -692,7 +681,6 @@
 
             // Display totals
             document.getElementById('modalSubtotal').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}`;
-            document.getElementById('modalTax').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(tax)}`;
             document.getElementById('modalTotal').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
 
             // Reset form
@@ -717,23 +705,22 @@
 
             // Validation
             if (!customerName) {
-                alert('Nama pelanggan harus diisi');
+                await window.KPAlert.warning('Nama pelanggan harus diisi', 'Data Tidak Lengkap');
                 return;
             }
             if (!paymentMethod) {
-                alert('Metode pembayaran harus dipilih');
+                await window.KPAlert.warning('Metode pembayaran harus dipilih', 'Data Tidak Lengkap');
                 return;
             }
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
+            const total = subtotal; // No tax
 
             const order = {
                 id: 'ORD-' + Date.now(),
                 items: cart,
                 subtotal: subtotal,
-                tax: tax,
+                tax: 0,
                 total: total,
                 status: 'completed',
                 customerName: customerName,
@@ -753,19 +740,22 @@
                         cart = [];
                         renderCart();
                         console.log('[Kasir] Order created in Firestore:', res.id);
-                        alert(`Pesanan berhasil dibuat!\n\nNo. Pesanan: ${res.id}\nNama: ${customerName}\nMetode: ${paymentMethod}\nMeja: ${tableNumber || '-'}\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(total)}`);
+                        await window.KPAlert.success(
+                            `No. Pesanan: ${res.id}\nNama: ${customerName}\nMetode: ${paymentMethod}\nMeja: ${tableNumber || '-'}\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(total)}`,
+                            'Pesanan Berhasil Dibuat!'
+                        );
                         return;
                     } else {
                         const errorMsg = res && res.error ? res.error : 'Unknown error';
                         console.error('[Kasir] Firestore createOrder failed:', errorMsg);
-                        alert('Gagal menyimpan pesanan ke Firestore.\n\nError: ' + errorMsg);
+                        await window.KPAlert.error('Gagal menyimpan pesanan ke Firestore.\n\nError: ' + errorMsg, 'Gagal Menyimpan');
                     }
                 } catch (err) {
                     console.error('[Kasir] Firestore createOrder exception:', err);
-                    alert('Gagal menyimpan pesanan ke Firestore.\n\nError: ' + (err && err.message ? err.message : String(err)));
+                    await window.KPAlert.error('Gagal menyimpan pesanan ke Firestore.\n\nError: ' + (err && err.message ? err.message : String(err)), 'Gagal Menyimpan');
                 }
             } else {
-                alert('Firestore tidak tersedia. Pastikan Anda terhubung ke internet dan Firebase sudah dikonfigurasi.');
+                await window.KPAlert.error('Firestore tidak tersedia. Pastikan Anda terhubung ke internet dan Firebase sudah dikonfigurasi.', 'Koneksi Gagal');
             }
         }
 
@@ -777,8 +767,9 @@
         });
 
         // Clear cart
-        function clearCart() {
-            if (confirm('Yakin ingin menghapus semua item?')) {
+        async function clearCart() {
+            const confirmed = await window.KPAlert.confirm('Semua item dalam keranjang akan dihapus', 'Hapus Semua Item?');
+            if (confirmed) {
                 cart = [];
                 renderCart();
             }

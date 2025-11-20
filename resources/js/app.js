@@ -1,5 +1,8 @@
 import './bootstrap';
 
+// Import sweet alert system
+import './sweet-alert.js';
+
 // Import form handlers
 import './register-form.js';
 import './login-form.js';
@@ -7,6 +10,7 @@ import './dashboard.js';
 import './forgot-password.js';
 import './toggle-password.js';
 import './orientation.js';
+import './sidebar-role.js'; // Role-based sidebar menu
 
 // Export auth functions globally for use in blade templates
 import { register, login, logout, getCurrentUser, onAuthChange } from './auth.js';
@@ -17,6 +21,15 @@ window.authFunctions = {
     logout,
     getCurrentUser,
     onAuthChange
+};
+
+// Export cloudinary functions globally
+import { uploadImageToCloudinary, generateImagePreview, deleteImageFromCloudinary } from './cloudinary.js';
+
+window.imageUploadFunctions = {
+    uploadImage: uploadImageToCloudinary,
+    generatePreview: generateImagePreview,
+    deleteImage: deleteImageFromCloudinary
 };
 
 // Export menu functions for use in menu-crud.blade.php

@@ -5,10 +5,10 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     server: {
         host: '0.0.0.0',  // Listen on all network interfaces
-        port: 5173,
+        port: 5174,
         hmr: {
-            host: '192.168.100.11',  // UBAH DENGAN IP ADDRESS KOMPUTER ANDA
-            port: 5173,
+            host: '192.168.18.64',  // IP ADDRESS KOMPUTER ANDA
+            port: 5174,
         },
         middlewareMode: false,
         cors: {

@@ -24,12 +24,13 @@ export const register = async (email, password, fullName) => {
         });
         console.log('[Auth] User profile updated with displayName:', fullName);
 
-        // Save user data to Firestore
+        // Save user data to Firestore with default role 'kasir'
         console.log('[Firestore] Saving user data to collection "users"...');
         await setDoc(doc(db, 'users', user.uid), {
             uid: user.uid,
             email: email,
             fullName: fullName,
+            role: 'kasir', // Default role is kasir, admin can be set manually in Firestore
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         });
@@ -80,6 +81,15 @@ export const logout = async () => {
         console.log('[Auth] Logging out...');
         await signOut(auth);
         console.log('[Auth] Logout successful');
+        
+        // Clear any session data
+        try {
+            sessionStorage.clear();
+            localStorage.removeItem('kp_user');
+        } catch (e) {
+            console.warn('[Auth] Could not clear storage:', e);
+        }
+        
         return { success: true };
     } catch (error) {
         console.error('[Auth Error]', error.code, error.message);
@@ -100,17 +110,35 @@ export const onAuthChange = (callback) => {
         if (user) {
             // Get user data from Firestore
             try {
+                console.log('[Firestore] Fetching user document for UID:', user.uid);
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
-                const userData = userDoc.exists() ? userDoc.data() : {};
-                console.log('[Firestore] User data retrieved:', userData);
-
-                callback({
-                    ...user,
-                    ...userData,
-                });
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    console.log('[Firestore] User data retrieved:', userData);
+                    console.log('[Firestore] User role:', userData.role);
+                    
+                    // Merge Firebase Auth user with Firestore data
+                    const mergedUser = {
+                        ...user,
+                        ...userData,
+                    };
+                    console.log('[Auth] Merged user data:', mergedUser);
+                    callback(mergedUser);
+                } else {
+                    console.warn('[Firestore] User document does not exist for UID:', user.uid);
+                    console.warn('[Firestore] Using default role: kasir');
+                    callback({
+                        ...user,
+                        role: 'kasir', // Default role if no document exists
+                    });
+                }
             } catch (error) {
                 console.error('[Firestore Error]', error);
-                callback(user);
+                callback({
+                    ...user,
+                    role: 'kasir', // Default role on error
+                });
             }
         } else {
             callback(null);

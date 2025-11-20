@@ -13,6 +13,8 @@
             padding-bottom: 6rem;
             max-width: 1200px;
             margin: 0 auto;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
         }
 
         .action-bar {
@@ -191,6 +193,8 @@
             padding: 2rem;
             max-width: 500px;
             width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
@@ -313,12 +317,38 @@
                     <input type="text" id="menuName" required>
                 </div>
                 <div class="form-group">
-                    <label>Harga *</label>
-                    <input type="number" id="menuPrice" min="0" required>
+                    <label>Kategori *</label>
+                    <select id="menuKategori" required style="width: 100%; padding: 0.75rem; border: 2px solid #E0E0E0; border-radius: 6px; font-size: 1rem;">
+                        <option value="">Pilih Kategori</option>
+                        <option value="Makanan">Makanan</option>
+                        <option value="Minuman">Minuman</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Icon/Emoji</label>
-                    <input type="text" id="menuIcon" placeholder="🍔">
+                    <label>Harga Beli *</label>
+                    <input type="number" id="menuPriceBuy" min="0" required placeholder="Harga modal/beli">
+                </div>
+                <div class="form-group">
+                    <label>Harga Jual *</label>
+                    <input type="number" id="menuPrice" min="0" required placeholder="Harga jual ke customer">
+                </div>
+                <div class="form-group">
+                    <label>Stok *</label>
+                    <input type="number" id="menuStok" min="0" required value="0">
+                </div>
+                <div class="form-group">
+                    <label>Gambar Menu</label>
+                    <input type="file" id="menuImage" accept="image/*" style="margin-bottom: 0.5rem;">
+                    <div id="imagePreview" style="margin-top: 0.5rem; display: none;">
+                        <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: cover;">
+                        <div id="uploadProgress" style="margin-top: 0.5rem; display: none;">
+                            <div style="background: #E0E0E0; border-radius: 4px; height: 8px; overflow: hidden;">
+                                <div id="progressBar" style="background: linear-gradient(135deg, #991B27 0%, #BD2630 100%); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <p id="progressText" style="margin-top: 0.25rem; font-size: 0.85rem; color: #666;">0%</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="menuImageUrl">
                 </div>
                 <div class="form-group">
                     <label>Deskripsi</label>
@@ -419,6 +449,8 @@
             editingId = null;
             document.getElementById('modalTitle').textContent = 'Tambah Menu';
             document.getElementById('menuForm').reset();
+            document.getElementById('menuImageUrl').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
             document.getElementById('menuModal').classList.add('active');
         });
 
@@ -430,15 +462,81 @@
             editingId = id;
             document.getElementById('modalTitle').textContent = 'Edit Menu';
             document.getElementById('menuName').value = item.name || '';
+            document.getElementById('menuKategori').value = item.kategori || '';
+            document.getElementById('menuPriceBuy').value = item.priceBuy || '';
             document.getElementById('menuPrice').value = item.price || '';
-            document.getElementById('menuIcon').value = item.icon || '';
+            document.getElementById('menuStok').value = item.stok || 0;
             document.getElementById('menuDescription').value = item.description || '';
+            document.getElementById('menuImageUrl').value = item.imageUrl || '';
+            
+            // Show existing image preview
+            if (item.imageUrl) {
+                document.getElementById('previewImg').src = item.imageUrl;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('uploadProgress').style.display = 'none';
+            } else {
+                document.getElementById('imagePreview').style.display = 'none';
+            }
+            
             document.getElementById('menuModal').classList.add('active');
         }
 
+        // Handle image upload preview and Cloudinary upload
+        document.getElementById('menuImage').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                // Show preview immediately
+                const preview = document.getElementById('imagePreview');
+                const previewImg = document.getElementById('previewImg');
+                preview.style.display = 'block';
+
+                // Generate local preview first
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    previewImg.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Upload to Cloudinary
+                const uploadProgress = document.getElementById('uploadProgress');
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                
+                uploadProgress.style.display = 'block';
+
+                // Use Cloudinary for image upload
+                if (!window.imageUploadFunctions) {
+                    throw new Error('Image upload functions not loaded. Make sure Vite is running.');
+                }
+                
+                const imageUrl = await window.imageUploadFunctions.uploadImage(file, (percent) => {
+                    progressBar.style.width = percent + '%';
+                    progressText.textContent = percent + '%';
+                });
+
+                // Store the Cloudinary URL
+                document.getElementById('menuImageUrl').value = imageUrl;
+                previewImg.src = imageUrl;
+                
+                // Hide progress after upload
+                setTimeout(() => {
+                    uploadProgress.style.display = 'none';
+                }, 1000);
+
+                console.log('[Menu CRUD] Image uploaded to Cloudinary:', imageUrl);
+            } catch (error) {
+                console.error('[Menu CRUD] Image upload error:', error);
+                await window.KPAlert.error('Gagal upload gambar: ' + error.message, 'Upload Gagal');
+                document.getElementById('imagePreview').style.display = 'none';
+            }
+        });
+
         // Delete menu
         async function deleteMenu_Handler(id) {
-            if (confirm('Yakin ingin menghapus menu ini?')) {
+            const confirmed = await window.KPAlert.confirm('Menu ini akan dihapus secara permanen', 'Hapus Menu?');
+            if (confirmed) {
                 try {
                     console.log('[Menu CRUD] Deleting menu:', id);
                     if (!window.menuFunctions || typeof window.menuFunctions.deleteMenu !== 'function') throw new Error('menuFunctions.deleteMenu not available');
@@ -446,7 +544,7 @@
                     console.log('[Menu CRUD] Menu deleted successfully');
                 } catch (error) {
                     console.error('[Menu CRUD] Error deleting menu:', error);
-                    alert('Gagal menghapus menu: ' + error.message);
+                    await window.KPAlert.error('Gagal menghapus menu: ' + error.message, 'Gagal Menghapus');
                 }
             }
         }
@@ -462,12 +560,15 @@
             e.preventDefault();
 
             const name = document.getElementById('menuName').value.trim();
+            const kategori = document.getElementById('menuKategori').value;
+            const priceBuy = parseInt(document.getElementById('menuPriceBuy').value) || 0;
             const price = parseInt(document.getElementById('menuPrice').value) || 0;
-            const icon = document.getElementById('menuIcon').value.trim() || '';
+            const stok = parseInt(document.getElementById('menuStok').value) || 0;
             const description = document.getElementById('menuDescription').value.trim();
+            const imageUrl = document.getElementById('menuImageUrl').value.trim();
 
-            if (!name || price === 0) {
-                alert('Nama dan harga harus diisi!');
+            if (!name || !kategori || price === 0 || priceBuy === 0) {
+                await window.KPAlert.warning('Nama, kategori, harga beli, dan harga jual harus diisi!', 'Data Tidak Lengkap');
                 return;
             }
 
@@ -475,15 +576,12 @@
                 // Buat object dengan fields yang ada di Firestore
                 const menuData = {
                     name: name,
+                    kategori: kategori,
+                    priceBuy: priceBuy,
                     price: price,
-                    icon: icon,
+                    stok: stok,
                     description: description,
-                    // Fields yang mungkin ada di form (jika ditambahkan nanti)
-                    ...(document.getElementById('menuPriceBuy') && { priceBuy: parseInt(document.getElementById('menuPriceBuy').value) || 0 }),
-                    ...(document.getElementById('menuKategori') && { kategori: document.getElementById('menuKategori').value.trim() }),
-                    ...(document.getElementById('menuStok') && { stok: parseInt(document.getElementById('menuStok').value) || 0 }),
-                    ...(document.getElementById('menuImageUrl') && { imageUrl: document.getElementById('menuImageUrl').value.trim() }),
-                    ...(document.getElementById('menuDetail') && { detail: document.getElementById('menuDetail').value.trim() })
+                    imageUrl: imageUrl || ''
                 };
 
                 if (editingId) {
@@ -491,19 +589,19 @@
                     if (!window.menuFunctions || typeof window.menuFunctions.updateMenu !== 'function') throw new Error('menuFunctions.updateMenu not available');
                     await window.menuFunctions.updateMenu(editingId, menuData);
                     console.log('[Menu CRUD] Menu updated successfully');
-                    alert('Menu berhasil diupdate!');
+                    await window.KPAlert.success('Menu telah berhasil diperbarui', 'Berhasil Diupdate!');
                 } else {
                     console.log('[Menu CRUD] Adding new menu');
                     if (!window.menuFunctions || typeof window.menuFunctions.addMenu !== 'function') throw new Error('menuFunctions.addMenu not available');
                     await window.menuFunctions.addMenu(menuData);
                     console.log('[Menu CRUD] Menu added successfully');
-                    alert('Menu berhasil ditambahkan!');
+                    await window.KPAlert.success('Menu baru telah ditambahkan ke daftar', 'Berhasil Ditambahkan!');
                 }
 
                 closeModal();
             } catch (error) {
                 console.error('[Menu CRUD] Error saving menu:', error);
-                alert('Gagal menyimpan menu: ' + error.message);
+                await window.KPAlert.error('Gagal menyimpan menu: ' + error.message, 'Gagal Menyimpan');
             }
         });
 

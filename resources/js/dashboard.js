@@ -1,4 +1,5 @@
-import { logout, onAuthChange } from './auth.js';
+import { logout, onAuthChange, getCurrentUser } from './auth.js';
+import { auth } from './firebase.js';
 
 let statisticsUnsubscribe = null;
 
@@ -125,12 +126,33 @@ async function loadRecentOrders() {
     ordersList.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">Tidak ada pesanan terbaru (Firestore tidak tersedia)</div>';
 }
 
-// Quick menu button handlers
-function setupQuickMenuHandlers() {
-    const cashierBtn = document.getElementById('cashierBtn');
-    const historyBtn = document.getElementById('historyBtn');
-    const recordBtn = document.getElementById('recordBtn');
-    const menuCrudBtn = document.getElementById('menuCrudBtn');
+// Quick menu button handlers with role-based filtering
+function setupQuickMenuHandlers(userRole) {
+    const isAdmin = userRole === 'admin';
+    
+    // Batch DOM queries
+    const buttons = {
+        cashier: document.getElementById('cashierBtn'),
+        history: document.getElementById('historyBtn'),
+        record: document.getElementById('recordBtn'),
+        menuCrud: document.getElementById('menuCrudBtn')
+    };
+
+    // Use requestAnimationFrame for optimal rendering
+    requestAnimationFrame(() => {
+        if (isAdmin) {
+            // Admin sees all menu items
+            if (buttons.cashier) buttons.cashier.style.cssText = 'display: flex !important;';
+            if (buttons.history) buttons.history.style.cssText = 'display: flex !important;';
+            if (buttons.record) buttons.record.style.cssText = 'display: flex !important;';
+            if (buttons.menuCrud) buttons.menuCrud.style.cssText = 'display: flex !important;';
+        } else {
+            // Kasir only sees Kasir and Riwayat (already set by default HTML)
+            if (buttons.cashier) buttons.cashier.style.cssText = 'display: flex !important;';
+            if (buttons.history) buttons.history.style.cssText = 'display: flex !important;';
+            // record and menuCrud remain hidden by default
+        }
+    });
 
     if (cashierBtn) {
         cashierBtn.addEventListener('click', () => {
@@ -161,6 +183,32 @@ function setupQuickMenuHandlers() {
     }
 }
 
+// Setup sidebar menu based on role
+function setupSidebarMenuByRole(userRole) {
+    console.log('[Dashboard] Setting up sidebar menu for role:', userRole);
+    
+    const sidebarKasir = document.getElementById('sidebarKasirItem');
+    const sidebarRiwayat = document.getElementById('sidebarRiwayatItem');
+    const sidebarPencatatan = document.getElementById('sidebarPencatatanItem');
+    const sidebarMenuCrud = document.getElementById('sidebarMenuCrudItem');
+
+    if (userRole === 'admin') {
+        // Admin sees all sidebar items
+        console.log('[Dashboard] Admin - showing all sidebar items');
+        if (sidebarKasir) sidebarKasir.style.display = 'block';
+        if (sidebarRiwayat) sidebarRiwayat.style.display = 'block';
+        if (sidebarPencatatan) sidebarPencatatan.style.display = 'block';
+        if (sidebarMenuCrud) sidebarMenuCrud.style.display = 'block';
+    } else {
+        // Kasir only sees Kasir and Riwayat in sidebar
+        console.log('[Dashboard] Kasir - hiding Pencatatan and Menu Crud from sidebar');
+        if (sidebarKasir) sidebarKasir.style.display = 'block';
+        if (sidebarRiwayat) sidebarRiwayat.style.display = 'block';
+        if (sidebarPencatatan) sidebarPencatatan.style.display = 'none';
+        if (sidebarMenuCrud) sidebarMenuCrud.style.display = 'none';
+    }
+}
+
 // Bottom navbar navigation uses href links directly
 // No additional setup needed
 
@@ -176,9 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+            console.log('[Dashboard] Logout button clicked');
             const result = await logout();
+            console.log('[Dashboard] Logout result:', result);
             if (result.success) {
-                    window.safeRedirectToLogin?.();
+                console.log('[Dashboard] Redirecting to login...');
+                window.location.href = '/login';
             }
         });
     }
@@ -186,26 +237,59 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sidebarLogoutBtn) {
         sidebarLogoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+            console.log('[Dashboard] Sidebar logout button clicked');
             const result = await logout();
+            console.log('[Dashboard] Logout result:', result);
             if (result.success) {
-                    window.safeRedirectToLogin?.();
+                console.log('[Dashboard] Redirecting to login...');
+                window.location.href = '/login';
             }
         });
     }
 
     // Monitor auth state
-    onAuthChange((user) => {
+    const unsubscribe = onAuthChange((user) => {
         if (!user) {
-                window.safeRedirectToLogin?.();
+            console.log('[Dashboard] No user detected');
+            // Auth state will handle redirect after logout
+            return;
         } else {
+            // Log full user object to debug
+            console.log('[Dashboard] Full user object:', user);
+            console.log('[Dashboard] User UID:', user.uid);
+            console.log('[Dashboard] User role from Firestore:', user.role);
+            
             const userNameEl = document.getElementById('userName');
             const userEmailEl = document.getElementById('userEmail');
+            const userRole = user.role || 'kasir'; // Default to kasir if no role
+
+            console.log('[Dashboard] Final user role:', userRole);
 
             if (userNameEl) {
-                userNameEl.textContent = user.displayName || 'Pengguna';
+                userNameEl.textContent = user.displayName || user.fullName || 'Pengguna';
             }
             if (userEmailEl) {
                 userEmailEl.textContent = user.email || '-';
+            }
+
+            // Display role badge
+            const userInfoDiv = document.querySelector('.user-info');
+            if (userInfoDiv && !document.getElementById('userRole')) {
+                const roleRow = document.createElement('div');
+                roleRow.className = 'user-info-row';
+                roleRow.id = 'userRoleRow';
+                roleRow.innerHTML = `
+                    <span class="user-info-label">Role:</span>
+                    <span class="user-info-value" id="userRole" style="text-transform: capitalize; font-weight: bold; color: ${userRole === 'admin' ? '#991B27' : '#4CAF50'};">
+                        ${userRole === 'admin' ? 'Admin' : 'Kasir'}
+                    </span>
+                `;
+                userInfoDiv.appendChild(roleRow);
+            } else if (document.getElementById('userRole')) {
+                // Update existing role display
+                const roleEl = document.getElementById('userRole');
+                roleEl.textContent = userRole === 'admin' ? 'Admin' : 'Kasir';
+                roleEl.style.color = userRole === 'admin' ? '#991B27' : '#4CAF50';
             }
 
             // Load stats and orders from Firestore (async)
@@ -220,9 +304,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('[Dashboard] Loading recent orders...');
                     await loadRecentOrders();
 
-                    setupQuickMenuHandlers();
-                    setupBottomNavigation();
-                    setupSidebarNavigation();
+                    console.log('[Dashboard] Setting up quick menu handlers with role:', userRole);
+                    setupQuickMenuHandlers(userRole); // Pass user role
+                    setupSidebarMenuByRole(userRole); // Setup sidebar based on role
 
                     // Refresh recent orders every 30 seconds (stats auto-update via listener)
                     setInterval(async () => {

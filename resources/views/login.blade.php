@@ -24,7 +24,7 @@
             </div>
 
             <!-- Login Form -->
-            <form id="loginForm" class="space-y-4" style="background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+            <form id="loginForm" method="post" action="javascript:void(0)" class="space-y-4" style="background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
                 <div>
                     <label for="email" class="block font-semibold mb-2 kp-form-label">Email</label>
                     <input

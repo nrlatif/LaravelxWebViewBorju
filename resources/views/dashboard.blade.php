@@ -324,6 +324,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
             gap: 1rem;
+            contain: layout;
         }
 
         @media (max-width: 640px) {
@@ -348,6 +349,7 @@
             font-size: 0.875rem;
             font-weight: 500;
             color: #333;
+            contain: layout style paint;
         }
 
         .quick-menu-btn:hover {
@@ -510,7 +512,8 @@
         <div class="card">
             <div class="card-header">Menu Cepat</div>
             <div class="quick-menu-grid">
-                <button class="quick-menu-btn" id="cashierBtn">
+                <!-- Admin: All menus | Kasir: Only Kasir and Riwayat -->
+                <button class="quick-menu-btn role-quick-menu" id="cashierBtn" style="display: flex;">
                     <div class="quick-menu-icon" style="background: linear-gradient(135deg, #991B27 0%, #BD2630 100%);">
                         <svg fill="white" viewBox="0 0 24 24">
                             <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4 10h-2v2h-2v-2h-2v-2h2V8h2v2h2v2z"/>
@@ -519,7 +522,7 @@
                     <span>Kasir</span>
                 </button>
 
-                <button class="quick-menu-btn" id="historyBtn">
+                <button class="quick-menu-btn role-quick-menu" id="historyBtn" style="display: flex;">
                     <div class="quick-menu-icon" style="background: linear-gradient(135deg, #ED884C 0%, #FFA500 100%);">
                         <svg fill="white" viewBox="0 0 24 24">
                             <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
@@ -528,7 +531,7 @@
                     <span>Riwayat</span>
                 </button>
 
-                <button class="quick-menu-btn" id="recordBtn">
+                <button class="quick-menu-btn role-quick-menu" id="recordBtn" style="display: none;">
                     <div class="quick-menu-icon" style="background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);">
                         <svg fill="white" viewBox="0 0 24 24">
                             <path d="M19 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h4l3 3 3-3h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 12h-2v2h-2v-2H8v-2h2v-2h2v2h2v2z"/>
@@ -537,7 +540,7 @@
                     <span>Pencatatan</span>
                 </button>
 
-                <button class="quick-menu-btn" id="menuCrudBtn">
+                <button class="quick-menu-btn role-quick-menu" id="menuCrudBtn" style="display: none;">
                     <div class="quick-menu-icon" style="background: linear-gradient(135deg, #2196F3 0%, #42A5F5 100%);">
                         <svg fill="white" viewBox="0 0 24 24">
                             <path d="M3 13h2v8H3zm4-8h2v16H7zm4-2h2v18h-2zm4 4h2v14h-2zm4-4h2v18h-2z"/>

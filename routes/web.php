@@ -2,10 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ImageProxyController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Image proxy route to bypass ISP blocking Cloudinary
+Route::get('/image-proxy', [ImageProxyController::class, 'proxy'])->name('image.proxy');
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

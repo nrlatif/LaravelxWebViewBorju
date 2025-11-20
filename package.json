@@ -15,6 +15,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "cloudinary": "^2.8.0",
         "firebase": "^12.6.0"
     }
 }

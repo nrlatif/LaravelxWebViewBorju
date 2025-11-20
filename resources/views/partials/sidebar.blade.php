@@ -30,26 +30,26 @@
                     Dashboard
                 </a>
             </li>
-            <li>
+            <li id="sidebarKasirItem" class="role-menu-item">
                 <a href="/kasir" class="quick-link {{ $sidebarIsActive('kasir') }}">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4 10h-2v2h-2v-2h-2v-2h2V8h2v2h2v2z"/></svg>
                     Kasir
                 </a>
             </li>
-            <li>
+            <li id="sidebarRiwayatItem" class="role-menu-item">
                 <a href="/riwayat" class="quick-link {{ $sidebarIsActive('riwayat') }}">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
                     Riwayat
                 </a>
             </li>
-            <li>
+            <li id="sidebarPencatatanItem" class="role-menu-item" style="display: none;">
                 <a href="/pencatatan" class="quick-link {{ $sidebarIsActive('pencatatan') }}">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm2 4h14v14H5V7zm2 2v2h10V9H7zm0 4v2h6v-2H7z"/></svg>
                     Pencatatan
                 </a>
             </li>
             <!-- Profile and Settings removed per request -->
-            <li>
+            <li id="sidebarMenuCrudItem" class="role-menu-item" style="display: none;">
                 <a href="/menu-crud">
                     <svg fill="currentColor" viewBox="0 0 24 24">
                         <path d="M11 9H9V2H8v7H6V2H5v7H3V2H2v20h20V2h-1v7h-3V2h-1v7h-3V2h-1v7zm7 8H7v-5h11v5z"/>
