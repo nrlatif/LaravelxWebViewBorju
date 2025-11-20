@@ -8,9 +8,9 @@
     <title>Kelola Menu - KP Borju</title>
     
     <!-- Preconnect untuk optimasi loading -->
-    <link rel="preconnect" href="https://console.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-    <link rel="dns-prefetch" href="https://console.cloudinary.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -414,10 +414,13 @@
             }
 
             menuGrid.innerHTML = items.map(item => {
-                // Optimasi URL Cloudinary dengan transformasi
+                // Optimasi URL Cloudinary dengan transformasi + cache busting
                 let optimizedUrl = item.imageUrl;
                 if (optimizedUrl && optimizedUrl.includes('cloudinary.com')) {
                     optimizedUrl = optimizedUrl.replace('/upload/', '/upload/w_300,h_300,c_fill,q_auto,f_auto/');
+                    // Tambah timestamp untuk prevent caching
+                    const separator = optimizedUrl.includes('?') ? '&' : '?';
+                    optimizedUrl += `${separator}t=${item.updatedAt || Date.now()}`;
                 }
                 return `
                 <div class="menu-card">
@@ -481,9 +484,12 @@
             document.getElementById('menuDescription').value = item.description || '';
             document.getElementById('menuImageUrl').value = item.imageUrl || '';
             
-            // Show existing image preview
+            // Show existing image preview with cache busting
             if (item.imageUrl) {
-                document.getElementById('previewImg').src = item.imageUrl;
+                let previewUrl = item.imageUrl;
+                const separator = previewUrl.includes('?') ? '&' : '?';
+                previewUrl += `${separator}t=${Date.now()}`;
+                document.getElementById('previewImg').src = previewUrl;
                 document.getElementById('imagePreview').style.display = 'block';
                 document.getElementById('uploadProgress').style.display = 'none';
             } else {
@@ -530,7 +536,8 @@
 
                 // Store the Cloudinary URL
                 document.getElementById('menuImageUrl').value = imageUrl;
-                previewImg.src = imageUrl;
+                // Set preview with fresh URL (no cache busting needed, it's a new upload)
+                previewImg.src = imageUrl + '?t=' + Date.now();
                 
                 // Hide progress after upload
                 setTimeout(() => {
@@ -593,7 +600,8 @@
                     price: price,
                     stok: stok,
                     description: description,
-                    imageUrl: imageUrl || ''
+                    imageUrl: imageUrl || '',
+                    updatedAt: Date.now() // Tambah timestamp untuk cache busting
                 };
 
                 if (editingId) {
@@ -604,6 +612,7 @@
                     await window.KPAlert.success('Menu telah berhasil diperbarui', 'Berhasil Diupdate!');
                 } else {
                     console.log('[Menu CRUD] Adding new menu');
+                    menuData.createdAt = Date.now(); // Tambah timestamp untuk menu baru
                     if (!window.menuFunctions || typeof window.menuFunctions.addMenu !== 'function') throw new Error('menuFunctions.addMenu not available');
                     await window.menuFunctions.addMenu(menuData);
                     console.log('[Menu CRUD] Menu added successfully');

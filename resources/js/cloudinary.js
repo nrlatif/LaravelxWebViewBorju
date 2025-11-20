@@ -50,12 +50,9 @@ export async function uploadImageToCloudinary(file, onProgress = null) {
                     const response = JSON.parse(xhr.responseText);
                     console.log('[Cloudinary] Full Response:', response);
                     
-                    // Ganti domain dari res.cloudinary.com ke console.cloudinary.com
+                    // Gunakan URL asli dari Cloudinary (res.cloudinary.com)
                     let imageUrl = response.secure_url || response.url;
-                    if (imageUrl) {
-                        imageUrl = imageUrl.replace('res.cloudinary.com', 'console.cloudinary.com');
-                        console.log('[Cloudinary] Modified URL:', imageUrl);
-                    }
+                    console.log('[Cloudinary] Image URL:', imageUrl);
                     
                     resolve(imageUrl);
                 } else {

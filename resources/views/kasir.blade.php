@@ -8,9 +8,9 @@
     <title>Kasir - KP Borju</title>
     
     <!-- Preconnect untuk optimasi loading -->
-    <link rel="preconnect" href="https://console.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-    <link rel="dns-prefetch" href="https://console.cloudinary.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -760,13 +760,19 @@
 
                 <div class="form-group">
                     <label for="paymentMethod">Metode Pembayaran</label>
-                    <select id="paymentMethod" name="paymentMethod" required>
+                    <select id="paymentMethod" name="paymentMethod" required onchange="toggleCashInput()">
                         <option value="">-- Pilih Metode Pembayaran --</option>
                         <option value="cash">Tunai</option>
-                        <option value="card">Kartu Kredit</option>
-                        <option value="transfer">Transfer Bank</option>
-                        <option value="qris">QRIS</option>
+                        <option value="non-cash">Non Tunai</option>
                     </select>
+                </div>
+
+                <div class="form-group" id="cashInputGroup" style="display: none;">
+                    <label for="cashAmount">Uang Tunai</label>
+                    <input type="number" id="cashAmount" name="cashAmount" placeholder="Masukkan nominal uang" min="0" step="1000">
+                    <div id="changeAmount" style="margin-top: 0.5rem; padding: 0.5rem; background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 6px; color: #166534; font-weight: 600; display: none;">
+                        Kembalian: Rp <span id="changeValue">0</span>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -984,7 +990,67 @@
         // Close order modal
         function closeOrderModal() {
             document.getElementById('orderModal').classList.remove('active');
+            document.getElementById('orderForm').reset();
+            document.getElementById('cashInputGroup').style.display = 'none';
+            document.getElementById('changeAmount').style.display = 'none';
         }
+
+        // Toggle cash input field
+        function toggleCashInput() {
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const cashInputGroup = document.getElementById('cashInputGroup');
+            const cashAmount = document.getElementById('cashAmount');
+            
+            if (paymentMethod === 'cash') {
+                cashInputGroup.style.display = 'block';
+                cashAmount.required = true;
+            } else {
+                cashInputGroup.style.display = 'none';
+                cashAmount.required = false;
+                cashAmount.value = '';
+                document.getElementById('changeAmount').style.display = 'none';
+            }
+        }
+
+        // Calculate change
+        function calculateChange() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const cashAmount = parseFloat(document.getElementById('cashAmount').value) || 0;
+            const change = cashAmount - total;
+            
+            const changeAmountDiv = document.getElementById('changeAmount');
+            
+            if (cashAmount > 0) {
+                if (change > 0) {
+                    // Ada kembalian
+                    changeAmountDiv.innerHTML = `💰 Uang Kembalian: Rp <span id="changeValue">${new Intl.NumberFormat('id-ID').format(change)}</span>`;
+                    changeAmountDiv.style.display = 'block';
+                    changeAmountDiv.style.background = '#F0FDF4';
+                    changeAmountDiv.style.borderColor = '#86EFAC';
+                    changeAmountDiv.style.color = '#166534';
+                } else if (change === 0) {
+                    // Uang pas
+                    changeAmountDiv.style.display = 'none';
+                } else {
+                    // Uang kurang
+                    changeAmountDiv.innerHTML = `⚠️ Uang Kurang: Rp <span id="changeValue">${new Intl.NumberFormat('id-ID').format(Math.abs(change))}</span>`;
+                    changeAmountDiv.style.display = 'block';
+                    changeAmountDiv.style.background = '#FEF2F2';
+                    changeAmountDiv.style.borderColor = '#FECACA';
+                    changeAmountDiv.style.color = '#991B1B';
+                }
+            } else {
+                changeAmountDiv.style.display = 'none';
+            }
+        }
+
+        // Listen to cash amount input
+        document.addEventListener('DOMContentLoaded', function() {
+            const cashAmountInput = document.getElementById('cashAmount');
+            if (cashAmountInput) {
+                cashAmountInput.addEventListener('input', calculateChange);
+            }
+        });
 
         // Submit order
         async function submitOrder() {
@@ -993,6 +1059,7 @@
             const customerName = document.getElementById('customerName').value.trim();
             const paymentMethod = document.getElementById('paymentMethod').value;
             const tableNumber = document.getElementById('tableNumber').value.trim();
+            const cashAmount = parseFloat(document.getElementById('cashAmount').value) || 0;
 
             // Validation
             if (!customerName) {
@@ -1007,6 +1074,20 @@
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const total = subtotal; // No tax
 
+            // Validasi tunai
+            if (paymentMethod === 'cash') {
+                if (!cashAmount || cashAmount <= 0) {
+                    await window.KPAlert.warning('Nominal uang tunai harus diisi', 'Data Tidak Lengkap');
+                    return;
+                }
+                if (cashAmount < total) {
+                    await window.KPAlert.warning('Uang tunai tidak mencukupi', 'Pembayaran Gagal');
+                    return;
+                }
+            }
+
+            const change = paymentMethod === 'cash' ? (cashAmount - total) : 0;
+
             const order = {
                 id: 'ORD-' + Date.now(),
                 items: cart,
@@ -1016,6 +1097,8 @@
                 status: 'completed',
                 customerName: customerName,
                 paymentMethod: paymentMethod,
+                cashAmount: paymentMethod === 'cash' ? cashAmount : null,
+                change: paymentMethod === 'cash' ? change : null,
                 tableNumber: tableNumber || '-',
                 date: new Date().toLocaleString('id-ID')
             };
@@ -1031,10 +1114,15 @@
                         cart = [];
                         renderCart();
                         console.log('[Kasir] Order created in Firestore:', res.id);
-                        await window.KPAlert.success(
-                            `No. Pesanan: ${res.id}\nNama: ${customerName}\nMetode: ${paymentMethod}\nMeja: ${tableNumber || '-'}\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(total)}`,
-                            'Pesanan Berhasil Dibuat!'
-                        );
+                        
+                        let successMessage = `No. Pesanan: ${res.id}\nNama: ${customerName}\nMetode: ${paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai'}\nMeja: ${tableNumber || '-'}\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
+                        
+                        if (paymentMethod === 'cash') {
+                            successMessage += `\n\nUang Tunai: Rp ${new Intl.NumberFormat('id-ID').format(cashAmount)}`;
+                            successMessage += `\nKembalian: Rp ${new Intl.NumberFormat('id-ID').format(change)}`;
+                        }
+                        
+                        await window.KPAlert.success(successMessage, 'Pesanan Berhasil Dibuat!');
                         return;
                     } else {
                         const errorMsg = res && res.error ? res.error : 'Unknown error';

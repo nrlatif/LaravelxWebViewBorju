@@ -775,6 +775,24 @@
                                 <span>Total:</span>
                                 <span>Rp ${new Intl.NumberFormat('id-ID').format(order.total)}</span>
                             </div>
+                            ${order.paymentMethod ? `
+                            <div class="summary-row" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #E0E0E0;">
+                                <span>Pembayaran:</span>
+                                <span><strong>${order.paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai'}</strong></span>
+                            </div>
+                            ` : ''}
+                            ${order.paymentMethod === 'cash' && order.cashAmount ? `
+                            <div class="summary-row">
+                                <span>Uang Tunai:</span>
+                                <span>Rp ${new Intl.NumberFormat('id-ID').format(order.cashAmount)}</span>
+                            </div>
+                            ` : ''}
+                            ${order.paymentMethod === 'cash' && order.change !== undefined && order.change !== null ? `
+                            <div class="summary-row" style="color: #166534; font-weight: 600;">
+                                <span>Kembalian:</span>
+                                <span>Rp ${new Intl.NumberFormat('id-ID').format(order.change)}</span>
+                            </div>
+                            ` : ''}
                         </div>
                         <div class="order-actions">
                             <button class="btn-action btn-view" onclick="viewOrder('${order.id}')">
@@ -948,6 +966,28 @@
                             <span>Rp ${new Intl.NumberFormat('id-ID').format(order.total)}</span>
                         </div>
                     </div>
+
+                    <!-- Payment Info -->
+                    ${order.paymentMethod ? `
+                    <div style="margin: 2mm 0; padding-top: 2mm; border-top: 1px dashed #000;">
+                        <div class="receipt-info-row">
+                            <span class="receipt-info-label">Pembayaran:</span>
+                            <span><strong>${order.paymentMethod === 'cash' ? 'TUNAI' : 'NON TUNAI'}</strong></span>
+                        </div>
+                        ${order.paymentMethod === 'cash' && order.cashAmount ? `
+                        <div class="receipt-info-row">
+                            <span class="receipt-info-label">Uang Tunai:</span>
+                            <span>Rp ${new Intl.NumberFormat('id-ID').format(order.cashAmount)}</span>
+                        </div>
+                        ` : ''}
+                        ${order.paymentMethod === 'cash' && order.change !== undefined && order.change !== null && order.change > 0 ? `
+                        <div class="receipt-info-row" style="font-weight: 700;">
+                            <span class="receipt-info-label">Kembalian:</span>
+                            <span>Rp ${new Intl.NumberFormat('id-ID').format(order.change)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
 
                     <!-- Footer -->
                     <div class="receipt-footer">
