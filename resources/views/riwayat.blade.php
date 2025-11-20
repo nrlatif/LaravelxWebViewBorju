@@ -558,12 +558,20 @@
                 return;
             }
 
-            orderList.innerHTML = filtered.reverse().map(order => `
+            orderList.innerHTML = filtered.reverse().map(order => {
+                // Format date to show only date without time
+                let displayDate = 'N/A';
+                if (order.date) {
+                    const datePart = order.date.split(' ')[0]; // Get only DD/MM/YYYY part
+                    displayDate = datePart;
+                }
+                
+                return `
                 <div class="order-card">
                     <div class="order-card-header">
                         <div>
                             <div class="order-id">${order.id}</div>
-                            <div class="order-date">${order.date || 'N/A'}</div>
+                            <div class="order-date">${displayDate}</div>
                         </div>
                         <span class="order-status status-${order.status || 'pending'}">${
                             order.status === 'completed' ? 'Selesai' :
@@ -617,7 +625,8 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // View order detail
@@ -627,8 +636,9 @@
                 const items = order.items && order.items.length > 0 
                     ? order.items.map(item => `${item.name} x${item.quantity} - Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}`).join('\n')
                     : 'Tidak ada item';
+                const displayDate = order.date ? order.date.split(' ')[0] : 'N/A';
                 await window.KPAlert.info(
-                    `${items}\n\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(order.total)}\nStatus: ${order.status}\nTanggal: ${order.date}`,
+                    `${items}\n\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(order.total)}\nStatus: ${order.status}\nTanggal: ${displayDate}`,
                     `Detail Pesanan ${orderId}`
                 );
             }
@@ -646,7 +656,7 @@
                         <div class="receipt-title">KP BORJU</div>
                         <div style="font-size: 0.8rem;">Kedai Kopi & Makanan</div>
                         <div style="font-size: 0.75rem; margin-top: 0.5rem;">
-                            ${order.date || new Date().toLocaleString('id-ID')}
+                            ${order.date ? order.date.split(' ')[0] : new Date().toLocaleDateString('id-ID')}
                         </div>
                     </div>
                     <div style="margin: 1rem 0;">
@@ -754,64 +764,54 @@
             }
         }
 
-        // Filter by date and time
+        // Filter by date
         function filterByDateTime(orders) {
+            // If no date filter is set, return all orders
+            if (!dateFilter.startDate && !dateFilter.endDate) {
+                return orders;
+            }
+
             return orders.filter(order => {
-                if (!order.date) return true;
+                if (!order.date) return false;
 
                 try {
-                    // Parse order date/time (format: "21/11/2025 10:30:45" or similar)
-                    const orderDateStr = order.date;
-                    let orderDate;
-
-                    // Try parsing different date formats
-                    if (orderDateStr.includes('/')) {
-                        // Format: DD/MM/YYYY HH:mm:ss
-                        const [datePart, timePart] = orderDateStr.split(' ');
-                        const [day, month, year] = datePart.split('/');
-                        orderDate = new Date(`${year}-${month}-${day}T${timePart || '00:00:00'}`);
-                    } else {
-                        orderDate = new Date(orderDateStr);
+                    // Parse order date (format: "21/11/2025 10:30:45" or "21/11/2025")
+                    const orderDateStr = order.date.trim();
+                    const datePart = orderDateStr.split(' ')[0]; // Get DD/MM/YYYY
+                    const [day, month, year] = datePart.split('/').map(str => parseInt(str, 10));
+                    
+                    // Create date object (month is 0-indexed in JS)
+                    const orderDate = new Date(year, month - 1, day);
+                    
+                    if (isNaN(orderDate.getTime())) {
+                        return false;
                     }
 
-                    if (isNaN(orderDate.getTime())) return true;
+                    // Normalize to date only (remove time)
+                    orderDate.setHours(0, 0, 0, 0);
 
-                    // Filter by date
+                    // Filter by start date
                     if (dateFilter.startDate) {
                         const startDate = new Date(dateFilter.startDate);
                         startDate.setHours(0, 0, 0, 0);
-                        if (orderDate < startDate) return false;
+                        if (orderDate < startDate) {
+                            return false;
+                        }
                     }
 
+                    // Filter by end date
                     if (dateFilter.endDate) {
                         const endDate = new Date(dateFilter.endDate);
-                        endDate.setHours(23, 59, 59, 999);
-                        if (orderDate > endDate) return false;
-                    }
-
-                    // Filter by time
-                    if (dateFilter.startTime || dateFilter.endTime) {
-                        const orderHours = orderDate.getHours();
-                        const orderMinutes = orderDate.getMinutes();
-                        const orderTimeInMinutes = orderHours * 60 + orderMinutes;
-
-                        if (dateFilter.startTime) {
-                            const [startHours, startMinutes] = dateFilter.startTime.split(':').map(Number);
-                            const startTimeInMinutes = startHours * 60 + startMinutes;
-                            if (orderTimeInMinutes < startTimeInMinutes) return false;
-                        }
-
-                        if (dateFilter.endTime) {
-                            const [endHours, endMinutes] = dateFilter.endTime.split(':').map(Number);
-                            const endTimeInMinutes = endHours * 60 + endMinutes;
-                            if (orderTimeInMinutes > endTimeInMinutes) return false;
+                        endDate.setHours(0, 0, 0, 0);
+                        if (orderDate > endDate) {
+                            return false;
                         }
                     }
 
                     return true;
                 } catch (e) {
-                    console.error('Error parsing date:', e);
-                    return true;
+                    console.error('Error parsing date:', orderDateStr, e);
+                    return false;
                 }
             });
         }
@@ -820,14 +820,10 @@
         function resetDateFilter() {
             dateFilter = {
                 startDate: null,
-                endDate: null,
-                startTime: null,
-                endTime: null
+                endDate: null
             };
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
-            document.getElementById('filterStartTime').value = '';
-            document.getElementById('filterEndTime').value = '';
             renderOrders();
         }
 
