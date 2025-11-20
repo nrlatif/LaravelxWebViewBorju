@@ -317,7 +317,7 @@
             }
             @page {
                 margin: 0;
-                size: 80mm 80mm;
+                size: 80mm auto;
             }
         }
 
@@ -327,57 +327,55 @@
 
         .receipt-container {
             width: 80mm;
-            height: 80mm;
             max-width: 80mm;
-            max-height: 80mm;
+            min-height: auto;
             margin: 0;
             padding: 3mm;
             font-family: 'Courier New', monospace;
             background: white;
             color: black;
             font-size: 8pt;
-            overflow: hidden;
             box-sizing: border-box;
         }
 
         .receipt-header {
             text-align: center;
             border-bottom: 1px dashed #333;
-            padding-bottom: 1mm;
-            margin-bottom: 1.5mm;
+            padding-bottom: 0.8mm;
+            margin-bottom: 1mm;
         }
 
         .receipt-logo {
-            font-size: 10pt;
+            font-size: 9pt;
             font-weight: bold;
             color: #991B27;
-            margin-bottom: 0.1mm;
-            letter-spacing: 1px;
+            margin-bottom: 0.3mm;
+            letter-spacing: 0.5px;
         }
 
         .receipt-title {
             font-weight: bold;
-            font-size: 8pt;
-            margin-bottom: 0.5mm;
+            font-size: 7pt;
+            margin-bottom: 0.3mm;
         }
 
         .receipt-subtitle {
-            font-size: 6pt;
+            font-size: 5.5pt;
             color: #666;
-            margin-bottom: 0.3mm;
-            line-height: 1.1;
+            margin-bottom: 0.2mm;
+            line-height: 1.05;
         }
 
         .receipt-divider {
             border-bottom: 1px dashed #333;
-            margin: 1.5mm 0;
+            margin: 1mm 0;
         }
 
         .receipt-info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.8mm;
-            font-size: 7pt;
+            margin-bottom: 0.5mm;
+            font-size: 6pt;
         }
 
         .receipt-info-label {
@@ -385,63 +383,64 @@
         }
 
         .receipt-item {
-            margin-bottom: 1mm;
+            margin-bottom: 0.8mm;
         }
 
         .receipt-item-name {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: 600;
-            margin-bottom: 0.5mm;
+            margin-bottom: 0.3mm;
             text-align: left;
+            line-height: 1.1;
         }
 
         .receipt-item-detail {
             display: flex;
             justify-content: space-between;
-            font-size: 7pt;
+            font-size: 6pt;
             color: #555;
-            padding-left: 2mm;
+            padding-left: 1.5mm;
         }
 
         .receipt-summary {
             border-top: 1px dashed #333;
-            padding-top: 1.5mm;
-            margin-top: 1.5mm;
+            padding-top: 1mm;
+            margin-top: 1mm;
         }
 
         .receipt-summary-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.8mm;
-            font-size: 7pt;
+            margin-bottom: 0.5mm;
+            font-size: 6pt;
         }
 
         .receipt-total {
-            font-size: 9pt;
+            font-size: 8pt;
             font-weight: bold;
-            margin-top: 0.8mm;
-            padding-top: 0.8mm;
+            margin-top: 0.5mm;
+            padding-top: 0.5mm;
             border-top: 1px solid #333;
         }
 
         .receipt-footer {
             border-top: 1px dashed #333;
-            padding-top: 1.5mm;
-            margin-top: 2mm;
+            padding-top: 1mm;
+            margin-top: 1.5mm;
             text-align: center;
         }
 
         .receipt-thank-you {
-            font-size: 9pt;
+            font-size: 8pt;
             font-weight: bold;
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
             color: #000;
         }
 
         .receipt-message {
-            font-size: 7pt;
+            font-size: 6pt;
             color: #333;
-            margin-bottom: 0.5mm;
+            margin-bottom: 0.3mm;
         }
 
         .empty-state {
@@ -785,12 +784,14 @@
                                 </svg>
                                 Cetak
                             </button>
+                            ${userRole !== 'kasir' ? `
                             <button class="btn-action btn-delete" onclick="deleteOrder('${order.id}')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                                 </svg>
                                 Hapus
                             </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -968,6 +969,12 @@
 
         // Delete order — Firestore only (no localStorage fallback)
         async function deleteOrder(firestoreDocId) {
+            // Check if user is kasir
+            if (userRole === 'kasir') {
+                await window.KPAlert.error('Akun kasir tidak memiliki izin untuk menghapus riwayat pesanan', 'Akses Ditolak');
+                return;
+            }
+
             const confirmed = await window.KPAlert.confirm('Pesanan ini akan dihapus secara permanen', 'Hapus Pesanan?');
             if (!confirmed) return;
 
