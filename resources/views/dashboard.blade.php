@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Dashboard - KP Borju</title>
+    <title>Dashboard - Kedai Sambel Borju</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Dashboard specific styles */
@@ -442,21 +442,6 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Welcome Card -->
-        <div class="card">
-            <div class="card-header">Selamat Datang di Dashboard</div>
-            <div class="user-info">
-                <div class="user-info-row">
-                    <span class="user-info-label">Nama:</span>
-                    <span class="user-info-value" id="userName">Loading...</span>
-                </div>
-                <div class="user-info-row">
-                    <span class="user-info-label">Email:</span>
-                    <span class="user-info-value" id="userEmail">Loading...</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Statistics Section -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -560,8 +545,6 @@
                 </div>
             </div>
         </div>
-
-        <button id="logoutBtn" class="logout-btn">Logout</button>
     </div>
 
     <!-- Bottom Navbar (Mobile) -->

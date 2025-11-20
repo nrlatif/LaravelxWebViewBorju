@@ -5,8 +5,10 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* KP Borju Brand Colors */
@@ -21,6 +23,14 @@
     --color-secondary: #BD2630;
     --color-tertiary: #ED884C;
     --vh: 1vh;
+}
+
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
 }
 
 /* Navbar Top Styling */

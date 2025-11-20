@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Kasir - KP Borju</title>
+    <title>Kasir - Kedai Sambel Borju</title>
     
     <!-- Preconnect untuk optimasi loading -->
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
@@ -47,29 +47,70 @@
 
         .menu-section {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, 130px);
+            gap: 0.75rem;
             overflow-y: auto;
-            padding: 1rem;
+            padding: 0.875rem;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            justify-content: start;
         }
 
-        @media (max-width: 768px) {
+        /* Large Tablet Portrait (iPad Pro, etc.) */
+        @media (min-width: 900px) and (max-width: 1024px) and (orientation: portrait) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                grid-template-columns: repeat(auto-fill, 155px);
+                gap: 0.85rem;
+                padding: 1rem;
+            }
+        }
+
+        /* Tablet Landscape */
+        @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+            .menu-section {
+                grid-template-columns: repeat(auto-fill, 125px);
+                gap: 0.7rem;
+                padding: 0.875rem;
+            }
+        }
+
+        /* Medium Tablet Portrait */
+        @media (min-width: 600px) and (max-width: 899px) and (orientation: portrait) {
+            .menu-section {
+                grid-template-columns: repeat(auto-fill, 140px);
                 gap: 0.75rem;
+                padding: 0.875rem;
+            }
+        }
+
+        /* Mobile Landscape */
+        @media (max-width: 767px) and (orientation: landscape) {
+            .menu-section {
+                grid-template-columns: repeat(auto-fill, 110px);
+                gap: 0.6rem;
                 padding: 0.75rem;
                 border-radius: 8px;
             }
         }
 
-        @media (max-width: 480px) {
+        /* Mobile Portrait */
+        @media (max-width: 599px) and (orientation: portrait) {
             .menu-section {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(auto-fill, 115px);
+                gap: 0.65rem;
+                padding: 0.625rem;
+                border-radius: 8px;
+            }
+        }
+
+        /* Mobile Small */
+        @media (max-width: 479px) {
+            .menu-section {
+                grid-template-columns: repeat(auto-fill, 110px);
                 gap: 0.5rem;
                 padding: 0.5rem;
+                border-radius: 8px;
             }
         }
 
@@ -195,7 +236,7 @@
 
         .menu-item-name {
             font-size: 0.78rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #2D3748;
             text-align: center;
             word-break: break-word;
@@ -501,6 +542,7 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 0.9rem;
+            margin-top: 0.75rem;
         }
 
         .clear-cart-btn:hover {
@@ -1115,11 +1157,11 @@
                         renderCart();
                         console.log('[Kasir] Order created in Firestore:', res.id);
                         
-                        let successMessage = `No. Pesanan: ${res.id}\nNama: ${customerName}\nMetode: ${paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai'}\nMeja: ${tableNumber || '-'}\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
+                        let successMessage = 'No. Pesanan: ' + res.id + '\nNama: ' + customerName + '\nMetode: ' + (paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai') + '\nMeja: ' + (tableNumber || '-') + '\nTotal: Rp ' + new Intl.NumberFormat('id-ID').format(total);
                         
                         if (paymentMethod === 'cash') {
-                            successMessage += `\n\nUang Tunai: Rp ${new Intl.NumberFormat('id-ID').format(cashAmount)}`;
-                            successMessage += `\nKembalian: Rp ${new Intl.NumberFormat('id-ID').format(change)}`;
+                            successMessage += '\n\nUang Tunai: Rp ' + new Intl.NumberFormat('id-ID').format(cashAmount);
+                            successMessage += '\nKembalian: Rp ' + new Intl.NumberFormat('id-ID').format(change);
                         }
                         
                         await window.KPAlert.success(successMessage, 'Pesanan Berhasil Dibuat!');

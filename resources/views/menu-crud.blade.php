@@ -7,6 +7,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Kelola Menu - KP Borju</title>
     
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Preconnect untuk optimasi loading -->
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
@@ -15,6 +20,14 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
         .menu-crud-container {
             padding: 1rem;
             padding-bottom: 6rem;
@@ -428,7 +441,7 @@
                         ${item.imageUrl ? `<img src="${optimizedUrl}" alt="${item.name}" loading="lazy" style="width: 100%; height: 150px; object-fit: cover;">` : `<div style="width: 100%; height: 150px; background: #E0E0E0; display: flex; align-items: center; justify-content: center;">📷</div>`}
                     </div>
                     <div class="menu-card-body">
-                        <h3 style="margin: 0.5rem 0; font-size: 1rem;">${item.name}</h3>
+                        <h3 style="margin: 0.5rem 0; font-size: 1rem; font-weight: 700;">${item.name}</h3>
                         <div class="menu-info">
                             <span class="menu-info-label">Harga Jual:</span>
                             <span class="menu-info-value">Rp ${new Intl.NumberFormat('id-ID').format(item.price || 0)}</span>

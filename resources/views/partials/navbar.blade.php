@@ -7,7 +7,7 @@
         </svg>
     </button>
 
-    <div class="navbar-brand">{{ $title ?? 'KP Borju' }}</div>
+    <div class="navbar-brand">{{ $title ?? 'Kedai Sambel Borju' }}</div>
 
     <div style="width: 2rem;"></div>
 </nav>

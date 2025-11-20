@@ -6,10 +6,14 @@
     </svg>
 </button>
 
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h2>KP Borju</h2>
-        <p style="font-size: 0.875rem; opacity: 0.9; margin: 0.5rem 0 0;">Menu</p>
+        <h2 style = "font-weight: 700; font-family: 'Poppins', sans-serif;">Kedai Sambel Borju</h2>
     </div>
     @php
         $sidebarCurrent = request()->path();
@@ -164,6 +168,9 @@
         width: 1.2rem;
         height: 1.2rem;
     }
+      .sidebar-header h2{
+            font-family: 'Poppins', sans-serif;
+        }
 
     .sidebar-quick-menu .quick-item.active,
     .sidebar-quick-menu .quick-item:hover {
