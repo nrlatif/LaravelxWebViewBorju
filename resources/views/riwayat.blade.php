@@ -461,7 +461,7 @@
                     console.log('[History] deleteOrder response:', res);
                     if (res && res.success) {
                         console.log('[History] Order deleted in Firestore successfully:', firestoreDocId);
-                        alert('Pesanan berhasil dihapus dari Firestore');
+                        alert('Pesanan berhasil dihapus');
                         // Wait a moment for the listener to update, then refresh UI
                         setTimeout(() => {
                             updateStatistics();

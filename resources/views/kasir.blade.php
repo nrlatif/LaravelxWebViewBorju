@@ -255,6 +255,135 @@
             color: #999;
             padding: 2rem 0;
         }
+
+        /* Order Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #991B27;
+            padding-bottom: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #E0E0E0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #991B27;
+            box-shadow: 0 0 0 3px rgba(153, 27, 39, 0.1);
+        }
+
+        .order-summary-box {
+            background: #F5F5F5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #991B27;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #991B27;
+            border-top: 1px solid #E0E0E0;
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #991B27 0%, #BD2630 100%);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #BD2630 0%, #991B27 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(153, 27, 39, 0.3);
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #991B27;
+            border: 2px solid #991B27;
+        }
+
+        .btn-cancel:hover {
+            background: #F5F5F5;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -320,6 +449,60 @@
                 </div>
                 <button class="checkout-btn" id="checkoutBtn" disabled>Checkout</button>
                 <button class="clear-cart-btn" id="clearCartBtn">Hapus Semua</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">Konfirmasi Pesanan</div>
+
+            <!-- Order Summary -->
+            <div class="order-summary-box">
+                <div id="orderItemsList"></div>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="modalSubtotal">Rp 0</span>
+                </div>
+                <div class="summary-row">
+                    <span>PPN (10%):</span>
+                    <span id="modalTax">Rp 0</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="modalTotal">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="customerName">Nama Pelanggan</label>
+                    <input type="text" id="customerName" name="customerName" placeholder="Masukkan nama pelanggan" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="paymentMethod">Metode Pembayaran</label>
+                    <select id="paymentMethod" name="paymentMethod" required>
+                        <option value="">-- Pilih Metode Pembayaran --</option>
+                        <option value="cash">Tunai</option>
+                        <option value="card">Kartu Kredit</option>
+                        <option value="transfer">Transfer Bank</option>
+                        <option value="qris">QRIS</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tableNumber">Nomor Meja</label>
+                    <input type="text" id="tableNumber" name="tableNumber" placeholder="Masukkan nomor meja (opsional)">
+                </div>
+            </form>
+
+            <!-- Buttons -->
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeOrderModal()">Batal</button>
+                <button class="btn-submit" onclick="submitOrder()">Proses Pesanan</button>
             </div>
         </div>
     </div>
@@ -485,8 +668,62 @@
         }
 
         // Checkout — save ONLY to Firestore (no localStorage fallback)
-        async function checkout() {
+        function checkout() {
             if (cart.length === 0) return;
+
+            // Show order modal
+            openOrderModal();
+        }
+
+        // Open order modal
+        function openOrderModal() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const tax = subtotal * 0.1;
+            const total = subtotal + tax;
+
+            // Display items
+            const itemsList = document.getElementById('orderItemsList');
+            itemsList.innerHTML = cart.map(item => `
+                <div class="summary-row">
+                    <span>${item.name} × ${item.quantity}</span>
+                    <span>Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</span>
+                </div>
+            `).join('');
+
+            // Display totals
+            document.getElementById('modalSubtotal').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}`;
+            document.getElementById('modalTax').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(tax)}`;
+            document.getElementById('modalTotal').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
+
+            // Reset form
+            document.getElementById('orderForm').reset();
+
+            // Show modal
+            document.getElementById('orderModal').classList.add('active');
+        }
+
+        // Close order modal
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.remove('active');
+        }
+
+        // Submit order
+        async function submitOrder() {
+            if (cart.length === 0) return;
+
+            const customerName = document.getElementById('customerName').value.trim();
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const tableNumber = document.getElementById('tableNumber').value.trim();
+
+            // Validation
+            if (!customerName) {
+                alert('Nama pelanggan harus diisi');
+                return;
+            }
+            if (!paymentMethod) {
+                alert('Metode pembayaran harus dipilih');
+                return;
+            }
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const tax = subtotal * 0.1;
@@ -499,6 +736,9 @@
                 tax: tax,
                 total: total,
                 status: 'completed',
+                customerName: customerName,
+                paymentMethod: paymentMethod,
+                tableNumber: tableNumber || '-',
                 date: new Date().toLocaleString('id-ID')
             };
 
@@ -508,11 +748,12 @@
                     console.log('[Kasir] Creating order in Firestore:', order);
                     const res = await of.createOrder(order);
                     if (res && res.success && res.id) {
-                        // Clear cart and notify
+                        // Close modal and clear cart
+                        closeOrderModal();
                         cart = [];
                         renderCart();
                         console.log('[Kasir] Order created in Firestore:', res.id);
-                        alert('Pesanan berhasil dibuat!\nNo. Pesanan: ' + res.id);
+                        alert(`Pesanan berhasil dibuat!\n\nNo. Pesanan: ${res.id}\nNama: ${customerName}\nMetode: ${paymentMethod}\nMeja: ${tableNumber || '-'}\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(total)}`);
                         return;
                     } else {
                         const errorMsg = res && res.error ? res.error : 'Unknown error';
@@ -527,6 +768,13 @@
                 alert('Firestore tidak tersedia. Pastikan Anda terhubung ke internet dan Firebase sudah dikonfigurasi.');
             }
         }
+
+        // Close modal when clicking outside
+        document.getElementById('orderModal').addEventListener('click', (e) => {
+            if (e.target.id === 'orderModal') {
+                closeOrderModal();
+            }
+        });
 
         // Clear cart
         function clearCart() {
