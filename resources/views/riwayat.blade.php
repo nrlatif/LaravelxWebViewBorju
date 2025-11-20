@@ -406,16 +406,12 @@
             </div>
         </div>
 
-        <!-- Date & Time Filter -->
+        <!-- Date Filter -->
         <div class="date-filter">
             <label>Filter Tanggal:</label>
             <input type="date" id="filterStartDate" placeholder="Dari">
             <label>s/d</label>
             <input type="date" id="filterEndDate" placeholder="Sampai">
-            <label style="margin-left: 1rem;">Jam:</label>
-            <input type="time" id="filterStartTime">
-            <label>s/d</label>
-            <input type="time" id="filterEndTime">
             <button class="filter-reset-btn" onclick="resetDateFilter()">Reset</button>
         </div>
 
@@ -438,9 +434,7 @@
         let currentFilter = 'all';
         let dateFilter = {
             startDate: null,
-            endDate: null,
-            startTime: null,
-            endTime: null
+            endDate: null
         };
 
         // Load orders (Firestore only, no localStorage fallback)
@@ -559,11 +553,10 @@
             }
 
             orderList.innerHTML = filtered.reverse().map(order => {
-                // Format date to show only date without time
+                // Format date to show date and time
                 let displayDate = 'N/A';
                 if (order.date) {
-                    const datePart = order.date.split(' ')[0]; // Get only DD/MM/YYYY part
-                    displayDate = datePart;
+                    displayDate = order.date; // Show full date with time (DD/MM/YYYY HH:MM:SS)
                 }
                 
                 return `
@@ -633,13 +626,55 @@
         async function viewOrder(orderId) {
             const order = allOrders.find(o => o.id === orderId);
             if (order) {
-                const items = order.items && order.items.length > 0 
-                    ? order.items.map(item => `${item.name} x${item.quantity} - Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}`).join('\n')
-                    : 'Tidak ada item';
-                const displayDate = order.date ? order.date.split(' ')[0] : 'N/A';
+                const displayDate = order.date || 'N/A';
+                const statusText = order.status === 'completed' ? 'Selesai' : 
+                                 order.status === 'processing' ? 'Proses' : 'Pending';
+                
+                let detailHTML = '<div style="text-align: left; font-size: 0.85rem; line-height: 1.5; max-height: 50vh; overflow-y: auto; overflow-x: hidden; padding: 2px;">';
+                
+                // Customer & Table Info - Compact
+                if (order.customerName || order.tableNumber) {
+                    detailHTML += '<div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb; font-size: 0.8rem;">';
+                    const infoParts = [];
+                    if (order.customerName) infoParts.push(`<strong>Pelanggan:</strong> ${order.customerName}`);
+                    if (order.tableNumber) infoParts.push(`<strong>Meja:</strong> ${order.tableNumber}`);
+                    detailHTML += infoParts.join(' | ');
+                    detailHTML += '</div>';
+                }
+                
+                // Order Items - Compact
+                detailHTML += '<div style="margin-bottom: 10px;">';
+                if (order.items && order.items.length > 0) {
+                    order.items.forEach(item => {
+                        detailHTML += `
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid #f8fafc;">
+                                <span style="flex: 1; font-size: 0.8rem;">${item.name} <span style="color: #94a3b8;">×${item.quantity}</span></span>
+                                <span style="font-weight: 600; font-size: 0.8rem; white-space: nowrap;">Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</span>
+                            </div>
+                        `;
+                    });
+                }
+                detailHTML += '</div>';
+                
+                // Summary - Compact
+                detailHTML += `
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem;">
+                            <strong>Total:</strong>
+                            <strong style="color: #991B27;">Rp ${new Intl.NumberFormat('id-ID').format(order.total)}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 0.75rem;">
+                            <span>Status: <strong style="color: ${order.status === 'completed' ? '#16a34a' : '#f59e0b'};">${statusText}</strong></span>
+                            <span>${displayDate}</span>
+                        </div>
+                    </div>
+                `;
+                
+                detailHTML += '</div>';
+                
                 await window.KPAlert.info(
-                    `${items}\n\nTotal: Rp ${new Intl.NumberFormat('id-ID').format(order.total)}\nStatus: ${order.status}\nTanggal: ${displayDate}`,
-                    `Detail Pesanan ${orderId}`
+                    detailHTML,
+                    `Detail #${orderId}`
                 );
             }
         }
@@ -845,16 +880,6 @@
 
         document.getElementById('filterEndDate').addEventListener('change', (e) => {
             dateFilter.endDate = e.target.value;
-            renderOrders();
-        });
-
-        document.getElementById('filterStartTime').addEventListener('change', (e) => {
-            dateFilter.startTime = e.target.value;
-            renderOrders();
-        });
-
-        document.getElementById('filterEndTime').addEventListener('change', (e) => {
-            dateFilter.endTime = e.target.value;
             renderOrders();
         });
 
