@@ -43,21 +43,21 @@
 
         .menu-section {
             display: grid;
-            grid-template-columns: repeat(auto-fill, 160px);
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, 240px);
+            gap: 1.25rem;
             overflow-y: auto;
             padding: 1rem;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            justify-content: start;
+            justify-content: center;
         }
 
         /* Large Tablet Portrait (iPad Pro, etc.) */
         @media (min-width: 900px) and (max-width: 1024px) and (orientation: portrait) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, 170px);
-                gap: 1rem;
+                grid-template-columns: repeat(auto-fill, 250px);
+                gap: 1.2rem;
                 padding: 1rem;
             }
         }
@@ -65,8 +65,8 @@
         /* Tablet Landscape */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, 145px);
-                gap: 0.875rem;
+                grid-template-columns: repeat(auto-fill, 210px);
+                gap: 1.1rem;
                 padding: 1rem;
             }
         }
@@ -74,8 +74,8 @@
         /* Medium Tablet Portrait */
         @media (min-width: 600px) and (max-width: 899px) and (orientation: portrait) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, 155px);
-                gap: 0.875rem;
+                grid-template-columns: repeat(auto-fill, 220px);
+                gap: 1.1rem;
                 padding: 1rem;
             }
         }
@@ -83,8 +83,8 @@
         /* Mobile Landscape */
         @media (max-width: 767px) and (orientation: landscape) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, 130px);
-                gap: 0.75rem;
+                grid-template-columns: repeat(auto-fill, 185px);
+                gap: 1rem;
                 padding: 0.875rem;
                 border-radius: 8px;
             }
@@ -93,8 +93,8 @@
         /* Mobile Portrait */
         @media (max-width: 599px) and (orientation: portrait) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, 135px);
-                gap: 0.75rem;
+                grid-template-columns: repeat(auto-fill, 180px);
+                gap: 0.95rem;
                 padding: 0.75rem;
                 border-radius: 8px;
             }
@@ -103,8 +103,8 @@
         /* Mobile Small */
         @media (max-width: 479px) {
             .menu-section {
-                grid-template-columns: repeat(auto-fill, 110px);
-                gap: 0.5rem;
+                grid-template-columns: repeat(auto-fill, 155px);
+                gap: 0.8rem;
                 padding: 0.5rem;
                 border-radius: 8px;
             }
@@ -114,17 +114,17 @@
             display: grid;
             grid-template-rows: auto auto auto auto;
             align-items: center;
-            padding: 0.75rem 0.625rem 0.625rem;
+            padding: 1rem 0.85rem 0.85rem;
             background: white;
             border: 2px solid #E8E8E8;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            height: 180px;
+            height: 260px;
             position: relative;
             overflow: visible;
-            gap: 0.4rem;
+            gap: 0.6rem;
         }
 
         .menu-item-card::before {
@@ -153,10 +153,10 @@
 
         @media (max-width: 768px) {
             .menu-item-card {
-                padding: 0.625rem 0.4rem 0.5rem;
+                padding: 0.9rem 0.6rem 0.7rem;
                 border-radius: 10px;
-                height: 165px;
-                gap: 0.3rem;
+                height: 230px;
+                gap: 0.5rem;
             }
 
             .menu-item-card:active {
@@ -171,24 +171,24 @@
 
         @media (max-width: 480px) {
             .menu-item-card {
-                padding: 0.5rem 0.35rem 0.4rem;
-                height: 160px;
-                gap: 0.25rem;
+                padding: 0.8rem 0.55rem 0.6rem;
+                height: 220px;
+                gap: 0.45rem;
             }
         }
 
         .menu-item-icon {
-            width: 56px;
-            height: 56px;
+            width: 110px;
+            height: 110px;
             background: linear-gradient(135deg, #991B27 0%, #BD2630 100%);
-            border-radius: 10px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             justify-self: center;
             color: white;
             font-weight: bold;
-            font-size: 1.5rem;
+            font-size: 2.5rem;
             box-shadow: 0 3px 6px rgba(153, 27, 39, 0.25);
             transition: all 0.3s ease;
             overflow: hidden;
@@ -199,12 +199,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 10px;
+            border-radius: 14px;
         }
         
         @media (max-width: 768px) {
             .menu-item-icon img {
-                border-radius: 8px;
+                border-radius: 12px;
             }
         }
 
@@ -215,67 +215,67 @@
 
         @media (max-width: 768px) {
             .menu-item-icon {
-                width: 46px;
-                height: 46px;
-                border-radius: 8px;
-                font-size: 1.25rem;
+                width: 90px;
+                height: 90px;
+                border-radius: 12px;
+                font-size: 2.25rem;
             }
         }
 
         @media (max-width: 480px) {
             .menu-item-icon {
-                width: 44px;
-                height: 44px;
-                border-radius: 8px;
-                font-size: 1.15rem;
+                width: 85px;
+                height: 85px;
+                border-radius: 12px;
+                font-size: 2rem;
             }
         }
 
         .menu-item-name {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #2D3748;
             text-align: center;
             word-break: break-word;
-            line-height: 1.3;
+            line-height: 1.35;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
             align-self: center;
-            max-height: 2.6em;
+            max-height: 2.7em;
         }
 
         @media (max-width: 768px) {
             .menu-item-name {
-                font-size: 0.75rem;
-                line-height: 1.2;
+                font-size: 0.85rem;
+                line-height: 1.3;
             }
         }
 
         @media (max-width: 480px) {
             .menu-item-name {
-                font-size: 0.7rem;
-                line-height: 1.15;
+                font-size: 0.8rem;
+                line-height: 1.25;
             }
         }
 
         .menu-item-price {
-            font-size: 0.78rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: #991B27;
             background: linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%);
-            padding: 0.35rem 0.55rem;
-            border-radius: 6px;
+            padding: 0.45rem 0.7rem;
+            border-radius: 8px;
             white-space: nowrap;
             justify-self: center;
         }
 
         @media (max-width: 768px) {
             .menu-item-price {
-                font-size: 0.7rem;
-                padding: 0.25rem 0.4rem;
+                font-size: 0.8rem;
+                padding: 0.35rem 0.5rem;
             }
         }
 
@@ -1573,6 +1573,7 @@
                 cart = [];
                 renderCart();
                 updateCartBadge();
+                updateMenuCardQuantities();
             }
         }
 
