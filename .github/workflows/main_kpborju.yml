@@ -38,6 +38,7 @@ jobs:
       - name: Install and build front-end
         run: |
           npm install
+          npm install terser
           npm run build
 
       # ---------------------------
