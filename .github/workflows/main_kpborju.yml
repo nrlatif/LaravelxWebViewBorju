@@ -28,7 +28,7 @@ jobs:
       # Frontend Build (Vite + Tailwind)
       # ============================
       - name: Install NPM Dependencies
-        run: npm install
+        run: npm install terser
 
       - name: Build Frontend
         run: npm run build
@@ -90,3 +90,4 @@ jobs:
         with:
           app-name: "kpborju"
           package: "app.zip"
+
