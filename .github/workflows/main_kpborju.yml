@@ -40,6 +40,7 @@ jobs:
       - name: Install NPM and Build Frontend Assets
         run: |
           npm install
+          npm install terser
           npm run build # Pastikan perintah ini sesuai dengan 'package.json' Anda (bisa juga 'npm run prod')
         working-directory: . 
 
@@ -76,3 +77,4 @@ jobs:
           app-name: 'kpborju'
           slot-name: 'Production'
           package: .
+
