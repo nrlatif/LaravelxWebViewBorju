@@ -1,60 +1,72 @@
-name: Build and Deploy Laravel to Azure Web App - kpborju
+name: Deploy Laravel to Azure Web App - kpborju
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Install PHP
+      # ============================
+      # PHP setup
+      # ============================
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, exif, intl, pdo_mysql, openssl
+          extensions: mbstring, intl, exif, pdo_mysql, openssl, fileinfo
 
-      # Composer
       - name: Install Composer Dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      # Build frontend (Tailwind + Vite)
-      - name: Build Frontend with NPM
-        run: |
-          npm install terser
-          npm install
-          npm run build
+      # ============================
+      # Frontend Build (Vite + Tailwind)
+      # ============================
+      - name: Install NPM Dependencies
+        run: npm install
 
-      # Laravel Optimize Commands
-      - name: Optimize Laravel
+      - name: Build Frontend
+        run: npm run build
+
+      # ============================
+      # Laravel Optimizations
+      # ============================
+      - name: Laravel optimize
         run: |
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
 
-      # CLEAR development files before packaging
-      - name: Remove unnecessary files
+      # ============================
+      # Cleanup (size reduction)
+      # ============================
+      - name: Remove files not needed for production
         run: |
           rm -rf node_modules
           rm -rf tests
           rm -rf .git
+          rm -rf .github
 
-      # ZIP application
-      - name: Zip artifact
+      # ============================
+      # Zip application for deployment
+      # ============================
+      - name: Create deployment package
         run: zip -r app.zip .
 
-      # Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: app
           path: app.zip
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -66,17 +78,15 @@ jobs:
         with:
           name: app
 
-      - name: Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_68D0B85468AE4789824A686120AC2AF2 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A8AA1E6BE0744D669A1D326658F9466E }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E25304138B84E30F5205D58EC }}
 
-      # Deploy ZIP file
-      - name: Deploy to Azure
+      - name: Deploy ZIP to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "kpborju"
-          package: app.zip
-
+          package: "app.zip"
