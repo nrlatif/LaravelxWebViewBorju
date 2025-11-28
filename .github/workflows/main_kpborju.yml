@@ -87,9 +87,9 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6B0DB85468AE4789B24A686120AC2AF2 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A8AA1E6BE0744D669A1D326658F9466E }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E2530413B8B4E39F5205D58EC }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID}}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID}}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTION_ID}}
 
       # -----------------------------
       # DEPLOY KE AZURE
@@ -100,3 +100,4 @@ jobs:
           app-name: "kpborju"
           slot-name: "Production"
           package: .
+
