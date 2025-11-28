@@ -89,7 +89,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID}}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID}}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTION_ID}}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID}}
 
       # -----------------------------
       # DEPLOY KE AZURE
@@ -100,4 +100,5 @@ jobs:
           app-name: "kpborju"
           slot-name: "Production"
           package: .
+
 
