@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy PHP app to Azure Web App - kpborju
+name: Build and Deploy Laravel to Azure Web App - kpborju
 
 on:
   push:
@@ -12,57 +9,62 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
+      # Install PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          # Anda mungkin perlu menambahkan extensions seperti 'mysql', 'pdo', atau 'gd' di sini
-          # Contoh: extensions: 'pdo, mysql, gd'
+          extensions: mbstring, exif, intl, pdo_mysql, openssl
 
-      - name: Check if composer.json exists
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: 'composer.json'
+      # Composer
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --optimize-autoloader
 
-      - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
-      
-      ## TAMBAHAN UNTUK LARAVEL: Instalasi NPM dan Build Aset (Tailwind/JS)
-      # Ini akan menginstal node_modules dan menjalankan skrip build Anda (misalnya: Vite/Mix)
-      - name: Install NPM and Build Frontend Assets
+      # Build frontend (Tailwind + Vite)
+      - name: Build Frontend with NPM
         run: |
           npm install
-          npm install terser
-          npm run build # Pastikan perintah ini sesuai dengan 'package.json' Anda (bisa juga 'npm run prod')
-        working-directory: . 
+          npm run build
 
-      - name: Upload artifact for deployment job
+      # Laravel Optimize Commands
+      - name: Optimize Laravel
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      # CLEAR development files before packaging
+      - name: Remove unnecessary files
+        run: |
+          rm -rf node_modules
+          rm -rf tests
+          rm -rf .git
+
+      # ZIP application
+      - name: Zip artifact
+        run: zip -r app.zip .
+
+      # Upload artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php-app
-          path: .
+          name: app
+          path: app.zip
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: php-app
-        
+          name: app
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -70,11 +72,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A8AA1E6BE0744D669A1D326658F9466E }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E25304138B84E30F5205D58EC }}
 
-      - name: 'Deploy to Azure Web App'
+      # Deploy ZIP file
+      - name: Deploy to Azure
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
-          app-name: 'kpborju'
-          slot-name: 'Production'
-          package: .
-
+          app-name: "kpborju"
+          package: app.zip
