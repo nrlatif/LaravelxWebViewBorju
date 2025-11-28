@@ -1,72 +1,72 @@
-name: Deploy Laravel to Azure Web App - kpborju
+name: Build & Deploy Laravel to Azure Web App
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ============================
-      # PHP setup
-      # ============================
+      # -----------------------------
+      # SETUP PHP
+      # -----------------------------
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          extensions: mbstring, intl, exif, pdo_mysql, openssl, fileinfo
+          php-version: "8.3"
+          extensions: mbstring, pdo, pdo_mysql, openssl, intl, tokenizer
 
-      - name: Install Composer Dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      # ============================
-      # Frontend Build (Vite + Tailwind)
-      # ============================
-      - name: Install NPM Dependencies
-        run: npm install terser
-
-      - name: Build Frontend
-        run: npm run build
-
-      # ============================
-      # Laravel Optimizations
-      # ============================
-      - name: Laravel optimize
+      # -----------------------------
+      # COMPOSER INSTALL
+      # -----------------------------
+      - name: Composer install
         run: |
-          php artisan config:clear
-          php artisan route:clear
-          php artisan view:clear
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
+          composer install --no-dev --optimize-autoloader --no-interaction
 
-      # ============================
-      # Cleanup (size reduction)
-      # ============================
-      - name: Remove files not needed for production
+      # -----------------------------
+      # NODE, NPM, VITE BUILD
+      # -----------------------------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install NPM packages + Terser + Build Vite
         run: |
-          rm -rf node_modules
-          rm -rf tests
-          rm -rf .git
-          rm -rf .github
+          npm install
+          npm install terser
+          npm run build
 
-      # ============================
-      # Zip application for deployment
-      # ============================
-      - name: Create deployment package
-        run: zip -r app.zip .
+      # ----------------------------------
+      # MOVE LARAVEL PUBLIC CONTENT TO ROOT (WAJIB DI AZURE)
+      # ----------------------------------
+      - name: Move public/ to root
+        run: |
+          cp -r public/* .
+          rm -rf public
 
+      # ----------------------------------
+      # REMOVE DEFAULT AZURE PAGE
+      # ----------------------------------
+      - name: Remove hostingstart.html
+        run: rm -f hostingstart.html
+
+      # ----------------------------------
+      # UPLOAD ARTIFACT
+      # ----------------------------------
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app
-          path: app.zip
-
+          name: laravel-app
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -79,17 +79,24 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: app
+          name: laravel-app
 
+      # -----------------------------
+      # LOGIN KE AZURE (PAKAI SECRET BAWAAN)
+      # -----------------------------
       - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_68D0B85468AE4789824A686120AC2AF2 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6B0DB85468AE4789B24A686120AC2AF2 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A8AA1E6BE0744D669A1D326658F9466E }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E25304138B84E30F5205D58EC }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E2530413B8B4E39F5205D58EC }}
 
-      - name: Deploy ZIP to Azure Web App
+      # -----------------------------
+      # DEPLOY KE AZURE
+      # -----------------------------
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "kpborju"
-          package: "app.zip"
+          slot-name: "Production"
+          package: .
