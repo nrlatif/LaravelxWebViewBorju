@@ -68,28 +68,28 @@ jobs:
           path: app.zip
 
 
-deploy:
-  runs-on: ubuntu-latest
-  needs: build
-  permissions:
-    id-token: write
-    contents: read
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
 
-  steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: app
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app
 
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_68D0B85468AE4789824A686120AC2AF2 }}
-        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A8AA1E6BE0744D669A1D326658F9466E }}
-        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E25304138B84E30F5205D58EC }}
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_68D0B85468AE4789824A686120AC2AF2 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A8AA1E6BE0744D669A1D326658F9466E }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7B2AAC9E25304138B84E30F5205D58EC }}
 
-    - name: Deploy ZIP to Azure Web App
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: "kpborju"
-        package: "app.zip"
+      - name: Deploy ZIP to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "kpborju"
+          package: "app.zip"
