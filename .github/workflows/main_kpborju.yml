@@ -1,65 +1,70 @@
-name: Deploy Laravel to Azure
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy PHP app to Azure Web App - kpborju
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
-      # ---------------------------
-      # SETUP PHP
-      # ---------------------------
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, intl, pdo, pdo_mysql, gd, bcmath
 
-      # ---------------------------
-      # INSTALL DEPENDENCIES
-      # ---------------------------
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      # ---------------------------
-      # BUILD FRONTEND (VITE)
-      # ---------------------------
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Check if composer.json exists
+        id: check_files
+        uses: andstor/file-existence-action@v1
         with:
-          node-version: '20'
+          files: 'composer.json'
 
-      - name: Install and build front-end
-        run: |
-          npm install
-          npm install terser
-          npm run build
+      - name: Run composer install if composer.json exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
-      # ---------------------------
-      # LARAVEL APP KEY (WAJIB)
-      # Azure harus punya APP_KEY di Configuration
-      # ---------------------------
-      - name: Generate app key (jika tidak dipakai Azure ENV)
-        run: php artisan key:generate --force || true
 
-      # ---------------------------
-      # SET STORAGE PERMISSIONS
-      # ---------------------------
-      - name: Fix permissions
-        run: chmod -R 775 storage bootstrap/cache
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-app
+          path: .
 
-      # ---------------------------
-      # DEPLOY TO AZURE APP SERVICE
-      # ---------------------------
-      - name: Deploy to Azure Web App
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: php-app
+      
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_78DFC53A821F4D018F33630987FAA82C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9BA13B692BF04DDD89E8AB685E0531FC }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C2EECB44909041ED8FE87FEAFFDA4F09 }}
+
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
-          app-name: "kpborju"   # GANTI JIKA PERLU
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          app-name: 'kpborju'
+          slot-name: 'Production'
           package: .
+          
