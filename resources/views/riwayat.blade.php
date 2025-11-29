@@ -312,8 +312,8 @@
                 position: fixed;
                 left: 0;
                 top: 0;
-                width: 80mm;
-                height: 80mm;
+                width: 58mm;
+                height: auto;
                 margin: 0;
                 padding: 0;
             }
@@ -322,7 +322,7 @@
             }
             @page {
                 margin: 0;
-                size: 80mm auto;
+                size: 58mm auto;
             }
         }
 
@@ -331,8 +331,8 @@
         }
 
         .receipt-container {
-            width: 80mm;
-            max-width: 80mm;
+            width: 58mm;
+            max-width: 58mm;
             min-height: auto;
             margin: 0;
             padding: 3mm;
