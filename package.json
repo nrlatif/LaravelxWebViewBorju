@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "cloudinary": "^2.8.0",
-        "firebase": "^12.6.0"
+        "firebase": "^12.6.0",
+        "terser": "^5.44.1"
     }
 }
