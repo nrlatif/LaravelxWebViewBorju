@@ -1,74 +1,70 @@
-name: Build & Deploy Laravel to Azure Web App
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy PHP app to Azure Web App - kpborju
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
-      # SETUP PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          extensions: mbstring, pdo_mysql, openssl, intl, tokenizer
+          php-version: '8.2'
 
-      # COMPOSER INSTALL
-      - name: Composer install
-        run: composer install --no-dev --optimize-autoloader
-
-      # NODE / VITE
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Check if composer.json exists
+        id: check_files
+        uses: andstor/file-existence-action@v1
         with:
-          node-version: '20'
+          files: 'composer.json'
 
-      - name: Install dependencies & build assets
-        run: |
-          npm install
-          npm install terser
-          npm run build
+      - name: Run composer install if composer.json exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
-      # COPY FILE YANG DIBUTUHKAN KE FOLDER DEPLOY
-      - name: Prepare deployment package
-        run: |
-          mkdir deploy
-          cp -R public/* deploy/
-          cp -R vendor deploy/vendor
-          cp -R storage deploy/storage
-          cp server.php deploy/index.php
 
-      - name: Upload artifact
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-app
-          path: deploy
+          name: php-app
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: laravel-app
-
-      - name: Azure Login
+          name: php-app
+      
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUB_ID }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FD04EC503EF042CD8D5B0FACE8E18D56 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_37687DC5D35240CEB01D2D7A4305A4DA }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4E8AEF26710F4433B561F6FECDBC2801 }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
           app-name: 'kpborju'
+          slot-name: 'Production'
           package: .
+          
