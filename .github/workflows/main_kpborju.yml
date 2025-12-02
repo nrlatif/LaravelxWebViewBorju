@@ -33,21 +33,24 @@ jobs:
 
       # NPM Install + Build
       - name: Install NPM dependencies
-        run: npm install terser 
-              npm install
+        run: npm install terser
 
       - name: Build Frontend (Vite)
         run: npm run build
         # Jika pakai Laravel Mix ganti:
         # run: npm run prod
 
-      # Copy Laravel public files to root
+      # Buat folder untuk deploy
       - name: Prepare deployment package
         run: |
           mkdir deploy
-          cp -R . deploy
-          rm -rf deploy/node_modules
-          rm -rf deploy/tests
+          rsync -av \
+            --exclude="deploy" \
+            --exclude="node_modules" \
+            --exclude="vendor" \
+            --exclude=".git" \
+            --exclude="tests" \
+            ./ deploy/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
