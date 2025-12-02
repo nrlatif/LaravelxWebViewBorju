@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy PHP app to Azure Web App - kpborju
+name: Build and deploy Laravel to Azure Web App
 
 on:
   push:
@@ -12,77 +9,66 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
-      # --- 1. SETUP PHP & COMPOSER ---
+      # Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.3"
+          extensions: mbstring, intl, pdo, pdo_mysql
+          coverage: none
 
-      - name: Check if composer.json exists
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: 'composer.json'
+      # Composer Install
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
-
-      # --- 2. SETUP NODE & NPM BUILD (Bagian Baru) ---
+      # Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 18
 
-      - name: Install dependencies & build assets
+      # NPM Install + Build
+      - name: Install NPM dependencies
+        run: npm install terser 
+              npm install
+
+      - name: Build Frontend (Vite)
+        run: npm run build
+        # Jika pakai Laravel Mix ganti:
+        # run: npm run prod
+
+      # Copy Laravel public files to root
+      - name: Prepare deployment package
         run: |
-          npm install terser
-          npm install
-          npm run build
-          rm -rf node_modules 
-          # Baris di atas (rm -rf) penting! Kita hapus node_modules setelah build 
-          # agar proses upload ke Azure lebih cepat dan ringan.
+          mkdir deploy
+          cp -R . deploy
+          rm -rf deploy/node_modules
+          rm -rf deploy/tests
 
-      # --- 3. UPLOAD ARTIFACT ---
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php-app
-          path: .
-          # Opsional: Jika Anda ingin memastikan file .env atau hidden file lain terbawa (hati-hati dengan secrets!)
-          # include-hidden-files: true 
+          name: laravel-app
+          path: deploy
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: php-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FD04EC503EF042CD8D5B0FACE8E18D56 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_37687DC5D35240CEB01D2D7A4305A4DA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4E8AEF26710F4433B561F6FECDBC2801 }}
+          name: laravel-app
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
-          app-name: 'kpborju'
-          slot-name: 'Production'
+          app-name: "kedaisambelborju"
+          slot-name: "Production"
+          publish-profile: ${{ secrets.__publishingprofilesecretname__ }}
           package: .
-
