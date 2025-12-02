@@ -42,6 +42,7 @@ jobs:
 
       - name: Install dependencies & build assets
         run: |
+          npm install terser
           npm install
           npm run build
           rm -rf node_modules 
@@ -84,3 +85,4 @@ jobs:
           app-name: 'kpborju'
           slot-name: 'Production'
           package: .
+
