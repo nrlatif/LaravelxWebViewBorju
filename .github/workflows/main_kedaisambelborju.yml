@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---------- PHP ----------
+      # PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -24,7 +24,7 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      # ---------- NODE ----------
+      # Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,21 +33,24 @@ jobs:
       - name: Install NPM dependencies
         run: npm install terser
 
-      - name: Build Frontend (Vite)
+      - name: Build frontend
         run: npm run build
 
-      # ---------- PREPARE DEPLOYMENT (ONLY PUBLIC FOLDER) ----------
+      # Prepare full Laravel app (except node_modules)
       - name: Prepare deployment package
         run: |
           mkdir deploy
-          cp -R public/* deploy/
-          cp public/.htaccess deploy/ 2>/dev/null || true
+          rsync -av \
+            --exclude="node_modules" \
+            --exclude=".git" \
+            --exclude="tests" \
+            ./ deploy/
 
-      # ---------- UPLOAD ARTIFACT ----------
+      # Upload
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: site
+          name: laravel-full
           path: deploy
 
   deploy:
@@ -58,9 +61,8 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: site
+          name: laravel-full
 
-      # ---------- DEPLOY TO AZURE (wwwroot) ----------
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
