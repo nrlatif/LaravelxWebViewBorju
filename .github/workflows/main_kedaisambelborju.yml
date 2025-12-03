@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---------- PHP SETUP ----------
+      # ---------- PHP ----------
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -21,45 +21,35 @@ jobs:
           extensions: mbstring, intl, pdo, pdo_mysql
           coverage: none
 
-      # ---------- COMPOSER ----------
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      # ---------- NODE SETUP ----------
+      # ---------- NODE ----------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20   # FIXED – sesuai dengan Vite & Firebase
+          node-version: 20
 
-      # ---------- NPM ----------
       - name: Install NPM dependencies
         run: npm install terser
 
       - name: Build Frontend (Vite)
         run: npm run build
-        # Jika pakai Laravel Mix:
-        # run: npm run prod
 
-      # ---------- PREPARE DEPLOY PACKAGE ----------
+      # ---------- PREPARE DEPLOYMENT (ONLY PUBLIC FOLDER) ----------
       - name: Prepare deployment package
         run: |
           mkdir deploy
-          rsync -av \
-            --exclude="deploy" \
-            --exclude="node_modules" \
-            --exclude="vendor" \
-            --exclude=".git" \
-            --exclude="tests" \
-            ./ deploy/
+          cp -R public/* deploy/
+          cp public/.htaccess deploy/ 2>/dev/null || true
 
       # ---------- UPLOAD ARTIFACT ----------
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-app
+          name: site
           path: deploy
 
-  # -------- DEPLOY JOB --------
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -68,8 +58,9 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: laravel-app
+          name: site
 
+      # ---------- DEPLOY TO AZURE (wwwroot) ----------
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -77,5 +68,3 @@ jobs:
           slot-name: "Production"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: .
-
-
