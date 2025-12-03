@@ -1,4 +1,4 @@
-name: Build and deploy Laravel to Azure Web App
+name: Build and Deploy Laravel to Azure
 
 on:
   push:
@@ -7,13 +7,16 @@ on:
   workflow_dispatch:
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
 
     steps:
+
+      # Checkout source
       - uses: actions/checkout@v4
 
-      # PHP
+      # ---------- PHP SETUP ----------
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -21,37 +24,53 @@ jobs:
           extensions: mbstring, intl, pdo, pdo_mysql
           coverage: none
 
+      # ---------- COMPOSER ----------
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      # Node
+      # ---------- NODE SETUP ----------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # ---------- NPM ----------
       - name: Install NPM dependencies
         run: npm install terser
 
-      - name: Build frontend
+      - name: Build assets
         run: npm run build
 
-      # Prepare full Laravel app (except node_modules)
-      - name: Prepare deployment package
+      # ---------- CREATE HTACCESS ----------
+      - name: Fix Rewrite Rules for Azure
+        run: |
+          cat << 'EOF' > public/.htaccess
+          <IfModule mod_rewrite.c>
+              RewriteEngine On
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteRule ^ index.php [L]
+          </IfModule>
+          EOF
+
+      # ---------- PREPARE DEPLOY PACKAGE ----------
+      - name: Create deployment folder
         run: |
           mkdir deploy
           rsync -av \
             --exclude="node_modules" \
+            --exclude="vendor" \
             --exclude=".git" \
             --exclude="tests" \
-            ./ deploy/
+            . ./deploy
 
-      # Upload
+      # ---------- UPLOAD ARTIFACT ----------
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-full
+          name: laravel-package
           path: deploy
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,8 +80,9 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: laravel-full
+          name: laravel-package
 
+      # Azure Deployment
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
